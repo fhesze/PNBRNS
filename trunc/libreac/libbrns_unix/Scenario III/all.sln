@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "all", "all.vfproj", "{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}"
+EndProject
+Project("{6989167D-11E4-40FE-8C1A-2192A86A7E90}") = "BrnsDll", "BrnsDll\BrnsDll.vfproj", "{E87BA089-EBF3-4146-A73E-103B48A8EDEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		ReleaseReturnRates|Win32 = ReleaseReturnRates|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.Debug|Win32.ActiveCfg = Release|Win32
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.Debug|Win32.Build.0 = Release|Win32
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.Release|Win32.ActiveCfg = Release|Win32
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.Release|Win32.Build.0 = Release|Win32
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.ReleaseReturnRates|Win32.ActiveCfg = Release|Win32
+		{0E4992CD-CCB7-4EE3-A2EF-50E63AAE0120}.ReleaseReturnRates|Win32.Build.0 = Release|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.Debug|Win32.ActiveCfg = Release|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.Debug|Win32.Build.0 = Release|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.Release|Win32.ActiveCfg = Release|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.Release|Win32.Build.0 = Release|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.ReleaseReturnRates|Win32.ActiveCfg = ReleaseReturnRates|Win32
+		{E87BA089-EBF3-4146-A73E-103B48A8EDEE}.ReleaseReturnRates|Win32.Build.0 = ReleaseReturnRates|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

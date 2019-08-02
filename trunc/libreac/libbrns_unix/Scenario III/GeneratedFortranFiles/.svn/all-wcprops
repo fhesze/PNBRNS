@@ -1,0 +1,131 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles
+END
+boundaries.f
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/boundaries.f
+END
+initialcond.f
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/initialcond.f
+END
+common_opt.inc
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/common_opt.inc
+END
+output.f
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/output.f
+END
+varporosity.f
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/varporosity.f
+END
+parameters.f
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/parameters.f
+END
+biogeo.f
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/biogeo.f
+END
+transferback.f
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/transferback.f
+END
+common_geo.inc
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/common_geo.inc
+END
+issolid.f
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/issolid.f
+END
+jacobian.f
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/jacobian.f
+END
+getdat.f
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/getdat.f
+END
+residual.f
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/residual.f
+END
+rates.f
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/rates.f
+END
+basic.f
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/basic.f
+END
+common_meas.inc
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/common_meas.inc
+END
+transferfw.f
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/transferfw.f
+END
+molecular.f
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/molecular.f
+END
+ssrates.f
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/ssrates.f
+END
+notransport.f
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/notransport.f
+END
+switches.f
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/GeneratedFortranFiles/switches.f
+END

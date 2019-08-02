@@ -1,0 +1,1 @@
+void invokebrns_(double *concAfterTransport, double *concBeforeTransport, double *outputConcentrations, int *numberOfSpecies, double *timeStep, int *fixedConcentrationBoundary, int *returnValue, double *pos_x, double *pos_y, double *pos_z, double *porosity, double *waterSaturation, double *parameterVector, double *rateVector);

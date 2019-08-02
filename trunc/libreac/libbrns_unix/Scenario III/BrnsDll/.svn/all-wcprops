@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll
+END
+invokebrns.f
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll/invokebrns.f
+END
+BrnsDll.dsp
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll/BrnsDll.dsp
+END
+BrnsDll.vfproj
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll/BrnsDll.vfproj
+END
+varporosity.f
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll/varporosity.f
+END
+parameters.f
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/Great-Mode/!svn/ver/2/PoreNetwork/BRNS/BrnsDll/parameters.f
+END

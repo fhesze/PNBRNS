@@ -1,0 +1,3 @@
+os = unix
+file = brns.so
+header = brnsdll_param.h

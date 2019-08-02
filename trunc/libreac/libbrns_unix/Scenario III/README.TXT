@@ -1,0 +1,4 @@
+- Load "all.sln" in Visual Studio 2005, with installed Intel Fortran Compiler 10
+- Copy Maple-generated Fortran files to this directory (e.g., from ..\..\BRNSPackage\GeneratedFortranFiles)
+- Move parameters.f and varporosity.f to directory BrnsDll
+- Build solution
