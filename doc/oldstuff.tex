@@ -1,0 +1,1037 @@
+\pagebreak
+\pagebreak 
+{\small  
+%*************************************************************************************
+\section{Functions of previous versions (still active)}
+
+\command{void gBin(int LOW, int value1,int value2,image\_cc *image)}{
+Segmentation of a 8-bit grey scale images according to a threshold. 
+The grey levels smaller or equal to {\tt LOW} are written to {\tt value1} the others are written to {\tt value2}. If {\tt value2} is larger than 255 the original values are maintained for grey levels $>$ {\tt LOW}.}
+\argu{LOW} {Threshold}
+\argu{value1} {grey level [0-255]}
+\argu{value2} {grey level [0-255]}
+\argu{image} {Pointer to the image}
+
+
+%-----------------------------------------------ok
+\command{void gBibin(int LOW,int HIGH,image\_cc *image)}{
+Segmentation of a 8-bit grey scale image according to 2 thresholds which are regarded to be the limits of a fuzzy region of the grey scale histogram where the true threshold is expected. The threshold is chosen locally according to the values of the neighboring pixel values (Conditional Dilation). 
+
+\medskip
+\argu{LOW} {lower threshold.}
+\argu{HIGH} {upper threshold.}
+\argu{image} {Pointer to the image.}
+
+\medskip
+All pixel of a grey level smaller or equal than {\tt LOW} are written to 0 as well as all pixel having values smaller than {\tt HIGH} and at least one direct neighbour smaller than {\tt LOW}. This algorithm is repeated iteratively until no pixel has to be changed anymore. The other pixel keep their original value. 
+}
+
+%-----------------------------------------------ok
+\command{int gBilevel(int *th\_high,int *th\_low,image\_cc *image)}{
+Calculates the limits of a fuzzy region on the grey scale of an 8-bit grey level image  as required by gBibin for thresholding.  The image should have a bimodal grey level histogram where the different modes are not clearly separated (a typical case).
+
+\medskip
+\argu{th\_high} {pointer to the upper limit.}
+\argu{th\_low} {pointer to lower limit.}
+\argu{image} {Pointer to the image.}
+\return -1 if the histogram is not bimodal, 1 if sucessful
+
+\medskip
+The bimodal grey level histogram $h(x)$ is analysed to get the lower and upper maxima $max1$ and $max2$ as well as the minimum $min$ in between. Then a Gaussian distribution $\hat h(x)$ is fitted to the upper mode. The lower limit is calculated as $(max1+min)/2$, the upper limit as $(p+min)/2$ where p is the location on the grey scale where $\hat h(p) = h(min)$. The resulting values {\tt th\_high} and {\tt th\_low} may be used in the function {\tt gBibin} for conditional dilation.
+}
+
+%--------------------------------- hj 30.4.99
+\command{       % COMMAND
+image\_cc *GetDddSegment(image\_cc *im, int ulx, int uly, int ulz, int nx, int ny, int nz)
+}{              % DESCRIPTION
+Cuts out a segment of a 3D grey level image.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{pointer to the original image.}
+\argu{ulx, uly, ulz}{coordinates of the upper left corner of the Segment.}
+\argu{nx, ny, nz}{number of voxels of the segment in different directions.}
+\return{pointer to the segment.}
+}
+%--------------------------------- hj 13.08.01
+\command{       % COMMAND
+double *GetGreyCdf(image\_cc *im)$^8$
+}{              % DESCRIPTION
+Returnes a 255 element array containing the cdf of grey levels
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 2D grey image}
+\return{cdf array (255 elements)}
+}
+%--------------------------------- hj 30.05.03---ok
+\command{       % COMMAND
+image\_cc *gWaterShed(image\_cc *image, int conmode)$^8$;
+}{              % DESCRIPTION
+Calculates the watershed lines for a grey image (only 8-bit images). The different basins separated by the watershed lines are marked by different grey values, the watershed line is 0. This may be applied to a distance map of a binary image to separate overlapping grains. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the grey image}
+\argu{conmode}{Connectivity mode: either 4 or 8.}
+\return{Pointer to the image containing the watershed and the basins}
+}
+
+
+%--------------------------------- ok
+\command{       % COMMAND
+double *GetAcov(image\_cc *im, double *corl, int lag, int mode)$^8$
+}{              % DESCRIPTION
+Returnes the autocovariance function of a 2D grey image
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image}
+\argu{*corl}{address to write the correlation length as result}
+\argu{lag}{maximum distance to evaluate (\# pixels)}
+\argu{mode}{indicates which directions are to be considered (bit1=x, bit2=y)}
+\return{pointer to an array of dimension {\tt lag} where the autocovariance function is stored}
+}
+
+%--------------------------------- ok
+\command{       % COMMAND
+double *GetSemiVar(image\_cc *im, int lag, int mode)$^8$
+}{              % DESCRIPTION
+Returnes the semivariogram of a 2D grey image
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image}
+\argu{lag}{maximum distance to evaluate (\# pixels)}
+\argu{mode}{indicates which directions are to be considered (bit1=x, bit2=y)}
+\return{pointer to an array of dimension {\tt lag} where the semivariogram is stored}
+}
+
+%-----------------------------------------------ok
+\command{void gErode(image\_cc *image,int step, int mode)}{
+Minimum/maximum filter for 8-bit grey scale images.
+
+\medskip
+\argu{image} {Pointer to the image.}
+\argu{step} {radius of the considered environment}
+\argu{mode} {0 = minimum, 1 = maximum filter} 
+
+\medskip
+Each pixel is set to the minimum/maximum value of its direct neighbours. This is iteratively done {\tt step} times considering the 4 and 8 nearest neighbours alternant starting with 4. The edges of the image are written to 255. 
+}
+
+
+%--------------------------------- hj 13.08.01---ok
+\command{       % COMMAND
+image\_cc *gMean2(image\_cc *image, int mode) 
+}{              % DESCRIPTION
+As Mean but returns an image of the variance at each pixel within the defined window of size ${\tt mode}\times {\tt mode}$
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{image} {Pointer to the image.}
+\argu{mode} {side length of the squared operating window (number of pixel)} 
+\return{Pointer to the image of variances}
+}
+
+
+%---------------------------------ok
+\command{       % COMMAND
+image\_cc *gSobel(image\_cc *im, int mode)
+}{              % DESCRIPTION
+Sobel filter (first derivative of local grey levels).  The image border is set to 0. For {\tt mode}=1 the histogram of the resulting image is rescaled to the entire grey scale [0 - max-grey]. (only for 2D images).
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\return{Pointer to the filtered image}
+}
+%---------------------------------ok
+\command{       % COMMAND
+image\_cc *gLaplace(image\_cc *im, int mode)
+}{              % DESCRIPTION
+Laplace filter (second derivative of local grey levels). The image border is set to 0. For {\tt mode}=1 the histogram of the resulting image is rescaled to the entire grey scale [0 - max-grey]. (only for 2D images).
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{mode}{Rescaling of the result if non-zero.}
+\return{Pointer to the filtered image}
+}
+
+
+%--------------------------------- ok
+\command{       % COMMAND
+double *gHisto(image\_cc *im, int precision);
+}{              % DESCRIPTION
+Calculates the grey level histogram (pdf).
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{precision}{only a fraction (1/precision) of pixels is considered}
+\return{Pointer to a 255-element array containing the histogram}
+}
+
+%---------------------------------ok
+\command{       % COMMAND
+image\_cc *GetRandImage(int col, int row, double rx, double ry, double cx, double cy, int mode)$^8$
+}{              % DESCRIPTION
+Returnes a random 2D image with defined correlation lengths in x and y direction
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*cdf}{cdf of grey levels}
+\argu{col, row}{dimensions of resulting image} 
+\argu{rx, ry}{size of pixel in x and y}
+\argu{cx, cy}{correlation lengths (\# pixel) in x ynd y}
+\argu{mode}{
+     0: Gaussian correlation \\
+     1: Lorentz-Correlation model\\
+     2: Exponential-Correlation model\\
+     3: von Karman-Correlation model\\}
+\return{pointer to the created image}
+}
+
+%--------------------------------- hj 10.08.01
+\command{       % COMMAND
+image\_cc *GetCorImage(double *cdf, int col, int row, double rx, double ry, double cx, double cy, int mode)$^8$
+}{              % DESCRIPTION
+Returnes a random 2D image optionally with defined grey distribution function (equal, Gauss or predefined {\tt cdf}), defined correlation length and defined correlation model (Gauss, Lorentz, Exponentila, von Karman).} 
+%To get different realzations you have to change the \QI\ varialbe {\tt IDUM} (default is -1). 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*cdf}{cdf of grey levels}
+\argu{col, row}{dimensions of reulting image} 
+\argu{rx, ry}{size of pixel in x and y}
+\argu{cx, cy}{correlation lengths (\# pixel) in x ynd y}
+\argu{mode} {0: equal distribution without any correlation (cx,cy,cz and cdf have no meaning here)\\
+     1: equal grey distribution with  gaussian correlation\\  
+     2: predefined grey distribution (cdf) distribution and gaussian correlation\\   
+     3: Gaussian correlation (cdf have no meaning here)\\
+     4: Lorentz-Correlation model (cdf have no meaning here)\\
+     5: Exponential-Correlation model (cdf have no meaning here)\\
+     6: von Karman-Correlation model (cdf have no meaning here)\\
+\argu{**acov}{covariance in x and y direction (acov[2][lag]) }
+\return{pointer to the created image}
+}
+
+%--------------------------------- hj 10.08.01
+\command{       % COMMAND
+long *gConfunc(image\_cc *image)$^8$
+}{              % DESCRIPTION
+Returns the connectivity function of a 2D grey image. The image is binarized for all possible thresholds [0,255] and the corresponding Euler number is dermined which is returned as a vector of 255 elements. The Euler numbers are not normalized by the size of the image. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the grey image}
+\return{array of 255 Euler numbers}
+}
+%--------------------------------- hj 13.08.01
+\command{       % COMMAND
+image\_cc *gCircMask(image\_cc *im, int xmid, int ymid, int rad, int val)$^{8,16}$
+}{              % DESCRIPTION
+Cuts out a circular image with center {\tt xmid, ymid} and radius {\tt rad}.
+All pixels outside the circle are set to grey level {\tt val}. The size of the returned image is reduced to 2*{\tt rad}+1.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the grey image}
+\argu{xmid, ymid}{center coordinates of the circle}
+\argu{rad}{radius of the circle}
+\argu{val}{grey level written to the background }
+\return{Pointer to the resulting image}
+}
+%--------------------------------- hj 12.06.02
+\command{       % COMMAND
+void gHistoMatch(double *cdf, image\_cc *image)$^8$
+}{              % DESCRIPTION
+Transforms the histogram of an image according to a predefined cdf, typically optained from a source image using the function {\tt GetGreyCdf()}.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*cdf}{predefined cdf of grey levels}
+\argu{*image}{Pointer to the 2D grey scale image }
+\return{no return value}
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+long int *bQuant(image\_cc *image);
+}{              % DESCRIPTION
+Calculates the frequency distribution of 16 different pixel configurations in a 2x2 square. 
+The returned pointer is input for the routines to calculate volume density, surface density, length density, curvature and Euler number.   
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the binary 2D-image.}
+\return{Pointer to the 16-element array containing frequencies of pixel configurations}
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+double bVoldens(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returnes the Area density of a 2D binary structure (0 phase) which corresponds to the Volume density of a 3D structure as estimated from the 2-dimensional section
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of pixel configurations obtained by bQuant()}
+\return{Volume density [-] }
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+double bSurfdens(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returnes the  Surface density $S_V$ [cm$^2$/cm$^3$] of the boundary of a 3D binary structure, 
+as estimated from a 2-dimensional binary section.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of pixel configurations obtained by bQuant()}
+\return{Surface density [L$^2$/L$^3$]  in units of image->rcol}
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+double bEuler4(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returnes the  Euler number of a 2D binary structure considering 4-connectivity of phase [1]
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by bQuant()}
+\return{Euler number [1/L$^2$]  in units of image->rcol}
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+double bEuler8(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returnes the  Euler number of a 2D binary structure considering 8-connectivity of phase [1]
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by bQuant()}
+\return{Euler number [1/L$^2$]  in units of image->rcol}
+}
+
+%--------------------------------- hj 11.06.02
+\command{       % COMMAND
+double bLengthdens(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returnes the  Lengthdensity $B_A$ [cm/cm$^2$] of the boundary of a 2D binary structure
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by bQuant()}
+\return{Lengthdensity [L/L$^2$]  in units of image->rcol}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{double b2DEuler(image\_cc *image)}{
+Calculates the 2D Euler number [-] of the dark phase (0) of a binary images.
+
+\medskip
+\argu{image} {Pointer to the first image description structure.} 
+
+\return dimensionless Euler number.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bErode(image\_cc *image,int step, int mode)}{
+Performs an erosion or dilation of a binary image (0/255).
+
+\medskip
+\argu{image} {Pointer to the image description structure.}
+\argu{step} {radius of the hexagonal structuring element }
+\argu{mode} {0 = erosion of the dark phase (0), 1 = dilation} 
+
+\medskip
+Erosion or dilation 
+is iteratively performed {\tt step} times considering the 4 and 8 nearest neighbours alternant starting with 4. Note that the original image is replaced and the outer shell (1 pixel) is written to 255.
+}
+
+%--------------------------------- hj 12.09.03
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bErodeMir(image\_cc *image,int step, int mode)}{
+as bErode but the outer shell of width {\tt step} is mirrored so that the complete image is treated.
+
+\medskip
+\argu{image} {Pointer to the image description structure.}
+\argu{step} {radius of the hexagonal structuring element }
+\argu{mode} {0 = erosion of the dark phase (0), 1 = dilation} 
+}
+
+%--------------------------------- hj 12.09.03
+\command{
+image\_cc *bErodeMirCirc(image\_cc *image,int step, int mode)
+}{
+as bErodeMir but optimal circles are used as structuring elements for erosion.  The original image is not replaced, the pointer to the resulting image is returned.
+
+\medskip
+\argu{image} {Pointer to the image description structure.}
+\argu{step} {radius of the hexagonal structuring element }
+\argu{mode} {0 = erosion of the dark phase (0), 1 = dilation} 
+\return{Pointer to the eroded image}
+}
+
+%--------------------------------- hj 12.09.03
+\command{       % COMMAND
+image\_cc *bGetDistMap(image\_cc *image, int *n, int gval, int gstep);
+}{              % DESCRIPTION
+Converts a binary image to its distance map: Each pixel in the white phase (255) is written to a grey value which corresponds to the distance of that pixel to phase 0. The closest distance gets grey value {\\tt gval} which increases ba steps {\tt gstep} with distance. The phase 0 is not changed. The total number of distance classes is written to {\tt n}. Note that it is a good idea to chose the parameters such that $ n \\cdot gstep > 255 - gval$. The resulting distance map can be used as input to a watershed segmentation e.g. to separate sintered grains or to calculate Minkowski functions. 
+  
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the binary image}
+\argu{*n}{Number of detected distance classes}
+\argu{gval}{Grey level for the first distance class}
+\argu{gstep}{Grey level step between adjacent distance classes}
+\return{Pointer to the image containing the distance map}
+}
+
+%--------------------------------- hj 03.07.05
+\command{       % COMMAND
+image\_cc *bGetFullDistMap(image\_cc *image, int *nblack, int *nwhite, int gstruc, int gval, int gstep);
+}{              % DESCRIPTION
+Converts a binary image to its full distance map: Each pixel in the white phase (255) is written to a grey value which corresponds to the distance of that pixel to phase 0 and each pixel in the black phase (0) is written to a grey value which corresponds to the distance of that pixel to the white phase (255).
+The boundary of the black phase is set to {\tt gstruc}, the 
+ closest distance gets grey value {\tt gstruc+/-gval} where the sign depends on whether the distance is in the white or in the black phase. It is increased by steps {\tt gstep} with distance. The total number of distance classes is written to {\tt nblack} and {\tt nwhite} respectively. Note that it is a good idea to chose the parameters such that  nwhite$\cdot$gstep $<$ 255 -(gstruc+gval) and nblack$\cdot$gstep$<$gstruc-gval. The maximum number of classes is limited by MAXDILAT=100 (parameter can be changed in {\tt quantim4.h}). The resulting distance map can be used to calculate Minkowski functions. 
+  
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the binary image}
+\argu{*nblack}{Number of detected distance classes in the black phase}
+\argu{*nwhite}{Number of detected distance classes in the white phase}
+\argu{gstruc}{Grey level written to the boundary of the black phase}
+\argu{gval}{Grey level for the first distance class}
+\argu{gstep}{Grey level step between adjacent distance classes}
+\return{Pointer to the image containing the distance map}
+}
+
+
+%--------------------------------- hj 12.09.03
+\command{       % COMMAND
+int bGetDistOpenMap(image\_cc *image, image\_cc *distance, image\_cc *opened,  int gval, int gstep)
+}{              % DESCRIPTION
+As bGetDistMap(), this function converts a binaryimage to its distance map. Additionally a 'granulometry map' is calculated where  each pixel in phase 1 (255) is written to a grey value which corresponds to the diameter of the maximum circle that can be placed inside phase 1 at that location (corresponding to the 'opening size'). The smallest circle is marked by the grey value {\\tt gval} which increases by steps {\\tt gstep} with the size of the ball.
+ 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the binary image}
+\argu{*distance}{Must initially be a copy of {\\tt image} and contains the resulting distance map after execution}
+\argu{*opened}{Must initially be a copy of {\\tt image} and contains the resulting granulometry map after execution}
+\argu{gval}{Grey level for the smallest size class}
+\argu{gstep}{Grey level step between subsequent size classes}
+\return{Number of detected size classes}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{
+image\_cc *GetDistOpenCloseMap(image\_cc *im, double gstep)\par
+image\_cc *GetDistOpenCloseMap(image\_cc *im, double gstep, int maxdist)}
+{Generates an opening-map (black phase) and a closing-map (white phase) of a binary image, which is a greyscale image where the grey value of each pixel indicates the 'opening size' ('closing-size') of the black (white) phase. {\tt gstep} is  the difference in grey level for the opening/closing of 1 pixel. This function is valid for isotropc pixel geometry. This function requires considerable computation time, so the maximum size for openings(closings) can be limited by {\tt maxdist}.
+
+\medskip
+\argu{*image} {Pointer to the binary image.}
+\argu{gstep} {scaling of the grey levels of the opening/closing map}
+\argu{maxdist} {maximum opening size to be considered}
+\return{Pointer to the resulting image}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+unsigned long bErodeMark(image\_cc *image, int mark, int step);
+}{              % DESCRIPTION
+Performs a dilation (0-phase) of a binary image with a circular 
+        structuring element of radius {\tt step}. The dilated area is marked 
+        with the greylevel {\tt mark}. The number of marked pixel is returned.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the binary image}
+\argu{step}{Radius of structuring element}
+\argu{mark}{Greylevel to mark dilated pixel}
+\return{Number of marked pixel}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bLogAnd(image\_cc *wnd1, image\_cc *wnd2)}{
+Logical AND relation (intersection) of two binary images.
+
+\medskip
+\argu{wnd1} {Pointer to the first image description structure.} 
+\argu{wnd2} {Pointer to the second image description structure.}
+
+\medskip
+The result is written to {\tt wnd1}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bLogOr(image\_cc *wnd1, image\_cc *wnd2)}{
+Logical OR relation (unification) of two binary images.
+
+\medskip
+\argu{wnd1} {Pointer to the first image description structure.} 
+\argu{wnd2} {Pointer to the second image description structure.}
+
+\medskip
+The result is written to {\tt wnd1}
+
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bAddition(image\_cc *wnd1, image\_cc *wnd2, int gv1, int gv2)}{
+Addition of two images.
+
+\medskip
+\argu{wnd1} {Pointer to the first image description structure.} 
+\argu{wnd2} {Pointer to the second image description structure.}
+\argu{gv1} {grey level to be set for phase in wnd1.}
+\argu{gv2} {grey level to be set for phase in wnd2.}
+
+\medskip
+the 0-values of the two images are set to {\tt gv1} and {\tt gv2} respectively, their intersection is set to 0. The result is written to {\tt wnd1}
+}
+
+%--------------------------------- hj 30.4.99
+\command{       % COMMAND
+void bHitMiss(image\_cc *im, int Mx, int My, long MP, long MNP)
+}{              % DESCRIPTION
+Hit or Miss Transform of a binary image. Structuring elemnts are still restricted to a size $<=$ 5 $\times$ 5 pixel (Mx, My $\in$ [1,2]). 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{Mx My}{Operating window of the structuring element in x and y direction, (2Mx+1)$\times$(2My+1)}
+\argu{MP}{Each nonzero bit of {\tt MP} indicates membership to the structuring element at position x = bitpos/(2Mx+1) and y = bitpos modulo (2Mx+1) .}
+\argu{MNP}{Each nonzero bit of {\tt MNP} indicates explicit non-membership to the structuring elemnt at position x = bitpos/(2Mx+1) and y = bitpos modulo (2Mx+1). Coordinates which are neither described by {\tt MP} nor {\tt MNP} (the corresponding bits are zero in both variables) are not significant.}
+}
+
+%--------------------------------- hj 27.11.02
+\command{       % COMMAND
+long int *bQuantRecMask(image\_cc *image, int xdim,int ydim, int xul, int yul);
+}{              % DESCRIPTION
+Calculates the frequency distribution of 16 different pixel configurations within a 2x2 square for a rectangular region. 
+The returned pointer is input for the routines to calculate volume density, surface density, length density, curvature and Euler number.   
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the binary 2D-image.}
+\argu{int xdim, ydimm}{Extension of the rectangular region [pixel].}
+\argu{int xul, int yul}{Coordinates of the upper left corner.}
+\return{Pointer to the 16-element array containing frequencies of pixel configurations}
+}
+
+%--------------hj 21.05.03-------------------------------------------------
+\command{void SaveRGBImageSeg(image\_cc *image, char *buf, int ulx, int uly, int drx, int dry)}{
+Saves a rectangular segment of a RGB image. 
+
+\medskip
+\argu{image} {Pointer to the image description structure.}
+\argu{buf} {Name of the tif-image to be saved without extension.}
+\argu{ulx} {x coordinate of the upper left corner of the segment}
+\argu{uly} {y coordinate of the upper left corner}
+\argu{drx} {x coordinate of the lower right corner}
+\argu{dry} {y coordinate of the lower right corner}
+
+}
+
+
+\bigskip 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		ddd stuff
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\bf ddd images}
+
+\medskip
+
+
+%--------------------------------- hj 04.06.03
+\command{       % COMMAND
+void SetDddShell(image\_cc *im, int thick, int val);
+}{              % DESCRIPTION
+Writes the complete shell of thickness {\tt thick}  to {\tt val}   
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{thick}{Thickness of the shell}
+\argu{val}{Value written to the shell}
+\return{no return value}
+}
+
+%--------------------------------- hj 30.4.99
+\command{       % COMMAND
+image\_cc *DddResRed(image\_cc *image, int mode) 
+}{              % DESCRIPTION
+Reduces image size and herewith resolution by averaging over regions of size (2mode+1)$^2$.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{pointer to the original image.}
+\argu{mode}{mode of reduction.}
+\return{pointer to the resulting image.}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+image\_cc *GetRandDDDImage(int col, int row, int dep, double rx,, double ry, double rz)
+}{              % DESCRIPTION
+Creates a 3D grey scale image in which the values of voxels are set randomly.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{col,row,dep}{Size of the image (x,y,z).}
+\argu{rx,ry,rz}{Resolution (size of voxels) in different dimensions (x,y,z).}
+\return{pointer to the created image.}
+}
+
+
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+void DddMinMax(image\_cc *im,int mode);
+}{              % DESCRIPTION
+Minimum/Maximum filter for a 3D grey scale image which operates within a 3x3x3 window.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{pointer to the image.}
+\argu{mode}{if 0 minimum, else maximum.}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+image\_cc *DddBin(image\_cc *im, unsigned char thresh);
+}{              % DESCRIPTION
+Converts a 3D grey scale image to a 3D binary image (btd-format) according to a threshold. Values $<=${\tt thresh} are coded by 0 and by 1 else.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{im}{Pointer to the 3D grey scale image.}
+\argu{thresh}{Threshold on the grey scale. }
+\return{pointer to the 3D binary image (btd-format).}
+}
+
+%--------------------------------- hj 12.06.02
+\command{       % COMMAND
+void DddBibin(int LOW,int HIGH,image\_cc *im);
+}{              % DESCRIPTION
+Segments an 3D grey scale image according to 2 thresholds which are regarded to be the limits of a fuzzy region of the grey scale histogram of the image (Conditional Dilation). All pixel of a grey level smaller or equal than {\tt LOW} are written to 0 as well as all pixel having values smaller than {\tt HIGH} and at least one direct neighbour smaller than {\tt LOW}. This algorithm is repeated iteratively until no pixel is to be changed. The other pixel keep their original value. This function overwrites the original image.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{LOW} {lower threshold.}
+\argu{HIGH} {upper threshold.}
+\argu{image} {Pointer to the image.}
+}
+
+
+%--------------------------------- hj 04.06.03
+\command{       % COMMAND
+image\_cc *DddWaterShed(image\_cc *image, int conmode);
+}{              % DESCRIPTION
+Calculates the watershed lines for a 3D grey image. The different basins separated by the watershed lines are marked by different grey values, the watershed is written to 0. This may be applied to a distance map of a binary image to separate overlapping grains. The distance map is obtained by BtdGetDistOpenMap() or  BtdGetDistMap().
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the grey image}
+\argu{conmode}{Connectivity mode: either 6 or 26.}
+\return{Pointer to the image containing the watershed and the basins}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+void DddClas(image\_cc *im, int Nclas, unsigned char *th, unsigned char *gval);
+}{              % DESCRIPTION
+Transforms a 3D grey scale image by dividing the grey scale into a number ({\tt Nclas}) of discrete classes. The upper limits of the grey values of the different classes are provided by {\tt *th} and the values to be written for each class by {\tt gval}.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{im}{Pointer to the 3D grey scale image.}
+\argu{Nclas}{Number of different classes.}
+\argu{*th}{Array of {\tt Nclas} thresholds $\in$[0,255] starting with lower values at {\tt th[0]}.}
+\argu{*gval}{Array of {\tt Nclas} greylevels $\in$[0,255] to be written for the corresponding classes.}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+double *DddHisto(image\_cc *im, int precision);
+}{              % DESCRIPTION
+Returns the grey-histogram of a 3D grey scale image.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{precision}{Only a fraction (1/{\tt precision}) of the total number of voxels are considered.}
+\return{Array with 255 elements containing the relative frequency of the corresponding grey value.}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+double *DddCircHisto(image\_cc *im, int precision, int rad);
+}{              % DESCRIPTION
+Same as {\tt DddHisto} but only consideres a central cylinder of radius {\tt rad}.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{precision}{Only a fraction (1/{\tt precision}) of the total number of voxels are considered.}
+\argu{rad}{Radius of the central cylinder to be considered (number of pixel).}
+\return{Array with 255 elements containing the relative frequency of the corresponding grey value.}
+}
+
+%--------------------------------- hj 24.9.98
+\command{       % COMMAND
+double *GetDddGreyCdf(image\_cc *im)
+}{              % DESCRIPTION
+Returns the cdf of grey levels for a 3D-grey scale image. This cdf can be used by {\tt GetCorDDDImage} to generate a random structure accordingly. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\return{Array with 256 elements describing the cdf}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+void DddEulerFunc(image\_cc *im, int *num, double **xdat, double **ydat, int prec)
+}{              % DESCRIPTION
+Calculates the connectivity function of a 3D grey scale image.(Take care that resolution of the image is set correctly!)
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{*num}{Adress where the number of function value are written to.}
+\argu{**xdat, **ydat}{Pointer to the adress where the function values are written to ({\tt xdat[i]}=threshold of greylevel, {\tt ydat[i]}= Euler number).}
+\argu{prec}{Step of grey thresholds for which the Euler number is calculated. Number of function values: 255/{\tt prec}.}
+}
+
+%----------------- PRIVAT ---------------- hj 24.9.98
+\command{       % COMMAND
+image\_cc *GetCorDDDImage(double *cdf, int col,int row,int dep,double rx,double ry, double rz,double cx,double cy, double cz, int mode)
+}{              % DESCRIPTION
+Generates a random 3D greylevel structure with predefined grey-histogram, correlation length and correlation model. The maximum size is restricted to 64$^3$. The structure is periodic only for this maximum size.  UNDER CONSTRUCTION!! NOT EVERYTHING WORKS!! USE WITH CARE!!
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*cdf}{Pointer to the 256-element array containing the cdf of grey levels. }
+\argu{col, row, dep}{Size of the image (number of voxels in x, y and z). }
+\argu{rx, ry, ry}{Size of the voxels in x, y and z. }
+\argu{cx, cy, cz}{Correlation lengths (number of voxels in x, y and z). }
+\argu{mode}{Correlation model: 0 = completely random without correlation (cx, cy, cz are ignored); 1 = Gaussian model; 2 = Mirrored gaussian (just try and you will get an idea or check the source to dig out that strange guy); 3 = Lorentz; 4 = Exponential, 5 = von Karman.}
+\return{pointer to the generated image.}
+}
+
+%--------------------------------- hj 13.08.01
+\command{       % COMMAND
+image\_cc *GetCorDDDImage2(double *cdf, int col, int row, int dep, double rx, double ry, double rz, double cx, double cy, double cz, int mode);
+}{              % DESCRIPTION
+Returns a random 3D grey image with predefined grey histogram and/or correlation lengths. The image is periodic only for dimensions = power of 2 UNDER CONSTRUCTION!! NOT EVERYTHING WORKS!! USE WITH CARE!!
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*cdf}{Pointer to the 256-element array containing the cumulative density function of grey levels. }
+\argu{col, row, dep}{Size of the image (number of voxels in x, y and z). }
+\argu{rx, ry, ry}{Size of the voxels in x, y and z. }
+\argu{cx, cy, cz}{Correlation lengths (number of voxels in x, y and z). }
+\argu{mode}{Correlation model:\\ 
+0 = equal grey distribution without any correlation (cx,cy,cz and cdf have no meaning here)\\
+1 = equal grey distribution with correlation (correlation lengths of resulting image will be different from cx, cy, cz!)\\ 
+2 = predefined greylevel (cdf) distribution and gaussian correlation (correlation lengths of resulting image will be different from cx, cy, cz!)\\ 
+3 = Gaussian covariance (cdf have no meaning here and in the following modes)\\
+4 = Lorentz covariance \\
+4 = Exponential  covariance\\ 
+5 = von Karman covariance}
+\return{pointer to the generated image.}
+}
+
+
+
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+double *GetDddAcov(image\_cc *im, double *corl, int lag, int mode)
+}{              % DESCRIPTION
+Calculates the autocovariance function and the correlation length of a 3D greylevel image
+the correlation length is written to {\tt *corl}. The first 3 bits of {\tt mode} indicate which directions (x,y,z) are to be considered.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the image.}
+\argu{*corl}{Adress where the correlation length is written to.}
+\argu{lag}{Maximum distance considered (number of pixel).}
+\argu{mode}{indicates which directions are to be considered (bit1=x, bit2=y, bit3=z)}
+\return{pointer to an arry of dimension {\tt lag} where the autocovariance function is stored.}
+}
+%--------------------------------- hj 02.10.02
+\command{       % COMMAND
+void DddDrawCylinder(image\_cc *image,  int xmid, int ymid, int rad, int len,  int val);
+}{              % DESCRIPTION
+Draws a cylinder at center {tt xmid/xmid} with length {\tt len} and radius {\tt rad} and value {\tt val}. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the 3d binary image}
+\argu{ xmid, xmid}{coordinates of cylinder center}
+\argu{len}{length of cylinder}
+\argu{rad}{radius of cylinder}
+\argu{val}{value to be written for the cylinder}
+}
+
+
+
+
+\bigskip 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		btd stuff
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\bf btd images}
+
+\medskip
+\command{void BtdErodeFilter(image\_cc *im, int step, int mode)}{
+Performs an erosion of the phase {\tt mode} by a spherical structuring element of radius {\tt step}. Note that an erosion of phase 1 corresponds to a dilation of phase 0. The outer shell of the eroded image (where the structuring element cannot be placed entirely into the image volume) is set to 0. This function is a filter, meaning the original image is lost after this operation (see *BtdErode()).
+
+\medskip
+\argu{im} {Pointer to the 3D image}
+\argu{step} {radius of the structuring element [voxels]}
+\argu{mode} {phase to be eroded [0,1]}
+}
+
+
+\command{image\_cc *BtdErode(image\_cc *im, int step, int mode)}{
+Performs an erosion of the phase {\tt mode} by a spherical structuring element of radius {\tt step}. Note that an erosion of phase 1 corresponds to a dilation of phase 0. The outer shell of the eroded image (where the structuring element cannot be placed entirely into the image volume) is cut off.
+
+\medskip
+\argu{im} {Pointer to the 3D image}
+\argu{step} {radius of the structuring element [voxels]}
+\argu{mode} {phase to be eroded [0,1]}
+
+\smallskip
+\return pointer to the 3D image containing erroded subvolume.
+}
+
+%--------------------------------- hj 04.06.03
+\command{       % COMMAND
+image\_cc *BtdErodeMir(image\_cc *im, int step, int mode)
+}{              % DESCRIPTION
+Same as BtdErode except that the shell is not cut off. To calculate the erosion at the border of the image, it is enlarged by mirroring the structure at the boundaries. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 3D image}
+\argu{step}{Radius of the structuring element[voxels]}
+\argu{mode}{Phase to be eroded [0,1]}
+\return{Pointer to the image containing the eroded structure}
+}
+
+%--------------------------------- hj 14.04.04
+\command{       % COMMAND
+image\_cc *BtdErodeMirDouble(image\_cc *im, double step, int mode)
+}{              % DESCRIPTION
+Same as BtdErodeMir except that the radius of the structuring element is of type {\tt double} (typically 0.5). 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 3D image}
+\argu{step}{Radius of the structuring element[voxels]}
+\argu{mode}{Phase to be eroded [0,1]}
+\return{Pointer to the image containing the eroded structure}
+}
+
+
+\command{image\_cc *BtdOpen(image\_cc *im, int step, int mode)}{
+Performs an opening (erosion followed by dilation) or closing (dilation followed by erosion) of a binary 3D image using a spherical structuring element of radius {\tt step}. The outer shell of the eroded image (where the structuring element cannot be placed entirely into the image volume) is cut off.
+
+\medskip
+\argu{im} {Pointer to the 3D image}
+\argu{step} {radius of the structuring element [voxels]}
+\argu{mode} {opening or closing  [0,1]}
+
+\smallskip
+\return pointer to the 3D image containing opened (closed) 3D-image.
+}
+
+%--------------------------------- hj 04.06.03
+\command{       % COMMAND
+image\_cc *BtdGetDistMap(image\_cc *image, int *n, int gval, int gstep);
+}{              % DESCRIPTION
+Converts a binary 3d image (btd-format) to its distance map (ddd-format): Each voxel in phase 1 is written to a grey value which corresponds to the distance of that voxel to phase 0. The closest distance gets grey value {\tt gval} which increases ba steps {\tt gstep} with distance. The phase 0 is not changed. The total number of distance classes is written to {\tt n}. Note that it is a good idea to chose the parameters such that $ n \cdot gstep < 255 - gval$. The resulting distance map can be used as input to a watershed segmentation e.g. to separate sintered grains. 
+  
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the 3D binary image (btd-format)}
+\argu{*n}{Number of detected distance classes}
+\argu{gval}{Grey level for the first distance class}
+\argu{gstaep}{Grey level step between adjacent distance classes}
+\return{Pointer to the ddd-image containing the distance map}
+}
+
+%--------------------------------- hj 04.06.03
+\command{       % COMMAND
+int BtdGetDistOpenMap(image\_cc *image, image\_cc *distance, image\_cc *opened,  int gval, int gstep)
+}{              % DESCRIPTION
+As BtdGetDistMap(), this function converts a binary 3d image (btd-format) to its distance map (ddd-format). Additionally a 'granulometry map' is calculated where  each voxel in phase 1 is written to a grey value which corresponds to the diameter of the maximum ball that can be placed inside phase 1 at that location (corresponding to the 'opening size'). The smallest ball is marked by the grey value {\tt gval} which increases by steps {\tt gstep} with the size of the ball.
+ 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the 3D binary image (btd-format)}
+\argu{*distance}{Must be a copy of {\tt image} in ddd-format and contains the resulting distance map after execution}
+\argu{*opened}{Must be a copy of {\tt image} in ddd-format and contains the resulting distance map after execution}
+\argu{gval}{Grey level for the smallest size class}
+\argu{gstep}{Grey level step between subsequent size classes}
+\return{Number of detected size classes}
+}
+
+%--------------------------------- hj 14.04.04
+\command{       % COMMAND
+int BtdGetDistOpenMapDouble(image\_cc *image, image\_cc *distance, image\_cc *opened,  int gval, int gstep, double step)
+}{              % DESCRIPTION
+As BtdGetDistOpenMap(), but the diameter of the spherical structuring element is incremented by steps of 0.5 to get a better resolution of the size distribution. This function converts a binary 3d image (btd-format) to its distance map (ddd-format). Additionally a 'granulometry map' is calculated where  each voxel in phase 1 is written to a grey value which corresponds to the diameter of the maximum ball that can be placed inside phase 1 at that location (corresponding to the 'opening size'). The smallest ball is marked by the grey value {\\tt gval} which increases by steps {\\tt gstep} with the size of the ball.
+ 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the 3D binary image (btd-format)}
+\argu{*distance}{Must be a copy of {\\tt image} in ddd-format and contains the resulting distance map after execution}
+\argu{*opened}{Must be a copy of {\\tt image} in ddd-format and contains the resulting distance map after execution}
+\argu{gval}{Grey level for the smallest size class}
+\argu{gstep}{Grey level step between subsequent size classes}
+\argu{step}{increment for structuring element (typically 0.5)}
+\return{Number of detected size classes}
+}
+
+\command{void SetBtdShell(image\_cc *im, int dx , int dy, int dz, int mode)}{
+Writes the shell of a 3D image with the thickness of {\tt dx, dy, dz} [voxels] to the value {\tt mode}.
+
+\medskip
+\argu{im} {Pointer to the 3D image}
+\argu{dx, dy, dz} {thickness of the shell in different dimensions [voxels]}
+\argu{mode} {Value to be written to the shell [0,1]}
+
+}
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+double BtdEuler(image\_cc *im);
+}{              % DESCRIPTION
+Claculates the volumetric 3D Euler number. Note that the resolutions im$->$ncol, im$->$nrow and im$->$nbits must be set to a meaningful value. The result is given in the corresponding unit [1/L$^3$].
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 3D binary image.}
+\return{Volumetric Euler number L$^{-3}$)}
+}
+
+%--------------------------------- hj 19.5.99
+\command{       % COMMAND
+double BtdVolSurf(image\_cc *im, double *vv, double *sv);
+}{              % DESCRIPTION
+Claculates the volume density (vv) and surface density (sv).
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 3D binary image.}
+\argu{*vv, *sv}{Addresses where the results are written to}
+\return{Volume of the sample in units of im->rcol}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+long int *BtdQuant(image\_cc *image);
+}{              % DESCRIPTION
+Calculates the frequency distribution of 255 different voxel configurations in a 2x2x2 cube. 
+The returned pointer is input for the routines to calculate volume density, surface density, mean curvature and Euler number.   
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the binary 3D-image.}
+\return{Pointer to the 255-element array containing frequencies of voxel configurations}
+}
+
+%--------------------------------- hj 27.11.02
+\command{       % COMMAND
+long int *BtdQuantMask(image\_cc *image, int xm, int ym, int zm, char *mask);
+}{              % DESCRIPTION
+Calculates the frequency distribution of the 255 different voxel configurations within a 2x2x2 cube for a region identified by {\tt mask}. The format of  {\tt mask} corresponds to that returned by GetSphereElement.
+The returned pointer is input for the routines to calculate volume density, surface density, mean curvature and Euler number.   
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the binary 3D-image.}
+\argu{int xm, ym, zm}{Coordinates of the center of the region described by {\tt mask}.}
+\argu{*mask}{description of the region to be analyzed.}
+\return{Pointer to the 255-element array containing frequencies of voxel configurations}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+double BtdVoldens(long int *h);
+}{              % DESCRIPTION
+Returns the volume density of the phase coded by [1]  
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by BtdQuant()}
+\return{volume density [-]}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+double BtdSurfdens(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returns the surface density of a binary structure
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by BtdQuant()}
+\return{surface density [L$^2$/L$^3$] in units of image->rcol}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+double BtdMeancurv(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returns the mean curvature of a binary structure
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by BtdQuant()}
+\return{mean curvature  in units of image->rcol}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+double BtdEuler6(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returns the volumetric Euler number of a 3D binary structure considering 6-connectivity of phase [1]
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by BtdQuant()}
+\return{Euler number [1/L$^3$]  in units of image->rcol}
+}
+
+%--------------------------------- hj 26.1.00
+\command{       % COMMAND
+double BtdEuler26(image\_cc *image, long int *h);
+}{              % DESCRIPTION
+Returns the volumetric Euler number of a 3D binary structure considering 26-connectivity of phase [1]
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*h}{Pointer to the array of voxel configurations obtained by BtdQuant()}
+\return{Euler number [1/L$^3$]  in units of image->rcol}
+}
+
+
+
+\bigskip 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		RGB stuff
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\bf RGB images}
+
+\medskip
+%--------------hj 21.05.03-------------------------------------------------
+\command{       % COMMAND
+image\_cc *ChangeResolutionRGB(image\_cc *image, int newx, int newy);
+}{              % DESCRIPTION
+Returns the pointer to a rescaled RGB-image. The new dimensions are {\tt newx} and {\tt newy} in x and y direction respectively.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the original image}
+\argu{ newx, newy}{new dimensions in x and y direction}
+\return{pointer to the rescaled image}
+}
+
+%--------------hj 21.05.03-------------------------------------------------
+\command{       % COMMAND
+image\_cc *TurnRGBImage(image\_cc *im, double grad)
+}{              % DESCRIPTION
+rotates a RGB image by the angle {\tt grad}
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the original image}
+\argu{ grad}{angle to be turned (degree)}
+\return{pointer to the rescaled image}
+}
+
+%--------------hj 21.05.03-------------------------------------------------
+\command{       % COMMAND
+image\_cc *FlipRGBImage(image\_cc *im);
+}{              % DESCRIPTION
+Flip the RGB-image in x direction.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the original image}
+\return{pointer to the fliped image}
+}
+
+%--------------hj 21.05.03-------------------------------------------------
+\command{       % COMMAND
+void WRGBPixel(image\_cc *in, int  x,int  y,unsigned char rval,unsigned char gval,unsigned char bval);
+}{              % DESCRIPTION
+Writes the RGB values at given coordinates.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the image}
+\argu{x, y}{coordinates}
+\argu{rval, gval, bval}{written rgb values}
+\return{no return}
+}
+
+
+
+
+}

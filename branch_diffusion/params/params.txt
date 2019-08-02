@@ -1,0 +1,6 @@
+Km = 231e-9
+mumax = 0.326e-9
+diff = 6e-10
+massbac = 0.248
+surfexp = 606.6e-4
+volexp = 2.45e-6

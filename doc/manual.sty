@@ -1,0 +1,71 @@
+%
+%  style for PSgraf manual
+%
+\oddsidemargin=10mm
+\evensidemargin=10mm
+\textwidth=145mm
+%
+\topmargin=-12.4mm
+\textheight=224mm
+\parindent=0mm
+%
+\newbox\buf\newdimen\len\newdimen\rem
+%\long\def\command#1#2{\vskip1.5mm plus2mm minus0.8mm{\tt #1}%
+%  \par\nobreak{\leftskip5mm #2\par}}
+%\long\def\argu#1#2{{\tt #1}%
+%  \hspace{5mm}\nobreak{\leftskip5mm\parindent5mm #2\par}}
+%\long\def\command#1#2{\vskip2.3mm plus2mm minus0.8mm{\tt\bf #1}%
+%  \par\nobreak{#2\par\vskip1.8mm}}
+\long\def\command#1#2{\begingroup\leftskip5mm\parindent-5mm\vskip2.3mm plus2mm minus0.8mm{\tt\bf #1}%
+  \par\nobreak{#2\par\vskip1.8mm}\endgroup}
+\long\def\argu#1#2{\begingroup\leftskip35mm\parindent-30mm{%
+  \makebox[30mm][l]{\tt #1}}%
+  \nobreak{#2\par}\endgroup}
+\long\def\return#1{\begingroup\leftskip25mm\parindent-20mm{%
+  \makebox[30mm][l]{return value:\quad}}%
+  \nobreak{#1\par}\endgroup}
+%\long\def\return#1{{\bf return value:} #1}%
+\long\def\lcommand#1#2#3{%
+  \setbox\buf=\hbox{{\tt #1(}} \len=\wd\buf \rem=\textwidth \advance\rem by-\len%
+  \vskip1.5mm plus2mm minus0.8mm%
+  \parbox[t]{\len}{{\tt #1(}}\parbox[t]{\rem}{{\tt #2)}\vskip2pt}%
+  \par\nobreak{\leftskip5mm #3\par}}
+%
+% table of contents
+%
+\def\tableofcontents{%
+  \@restonecolfalse\if@twocolumn\@restonecoltrue\onecolumn\fi
+  \@starttoc{toc}\if@restonecol\twocolumn\fi%
+}
+%
+%
+\def\@makechapterhead#1{{%
+  \Large\bf\thechapter\quad\raggedright #1\par%
+  \vskip2mm plus 1mm minus 1mm}%
+}
+%
+\def\section{%
+  \pagebreak[2]%
+  \@startsection{section}{1}{\z@}{4mm plus 3mm minus 2mm}{1mm plus 0.5mm minus 0.4mm}%
+  {\reset@font\large\bf\raggedright\parfillskip0em plus1fil}%
+}
+\def\subsection{%
+  \@startsection{subsection}{2}{\z@}{8mm plus 3mm minus 2mm}{1mm plus 0.5mm minus 0.4mm}%
+  {\reset@font\normalsize\bf\raggedright}%
+}
+%\def\section#1{%
+%  \vskip12mm plus 7mm minus 4mm\penalty-200%
+%  {\Large\sc #1}\penalty5000\vskip2mm plus 1mm minus 0.8mm\penalty5000}
+%\def\subsection#1{%
+%  \vskip8mm plus 3mm minus 2mm\penalty-200%
+%  {\large\sc #1}\penalty5000\vskip1mm plus 0.5mm minus 0.4mm\penalty5000}
+%
+% figure references
+\def\fig#1{Figure~\protect\ref{f#1}}
+\def\figs#1#2{Figures~\protect\ref{f#1}--\protect\ref{f#2}}
+%
+%
+\newenvironment{references}%
+    {\leftskip=10mm\parindent=-10mm\frenchspacing}%
+    {\parindent=0mm\leftskip=0cm\nonfrenchspacing}
+%

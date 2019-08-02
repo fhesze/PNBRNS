@@ -1,0 +1,64 @@
+\begin{thebibliography}{6}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Centler et~al.({2010})Centler, Shao, De~Biase, Park, Regnier, Kolditz,
+  and Thullner]{Centler2010}
+Florian Centler, Haibing Shao, Cecilia De~Biase, Chan-Hee Park, Pierre Regnier,
+  Olaf Kolditz, and Martin Thullner.
+\newblock {GeoSysBRNS-A flexible multidimensional reactive transport model for
+  simulating biogeochemical subsurface processes}.
+\newblock \emph{{Computers \& Geosciences}}, {36}\penalty0 ({3}):\penalty0
+  {397--405}, {Mar} {2010}.
+\newblock ISSN {0098-3004}.
+\newblock \doi{{10.1016/j.cageo.2009.06.009}}.
+
+\bibitem[Dupin et~al.(2001)Dupin, Kitanidis, and Carty]{Dupin2001}
+Hubert~J. Dupin, Peter Kitanidis, and Perry L.~Mc Carty.
+\newblock Simulations of two-dimensional modeling of biomass aggregate growth
+  in network models.
+\newblock \emph{Water Resources Research}, 37:\penalty0 2981--2994, 2001.
+
+\bibitem[Gharasoo et~al.(2012)Gharasoo, Centler, Regnier, Harms, and
+  Thullner]{Gharasoo2012}
+Mehdi Gharasoo, Florian Centler, Pierre Regnier, Hauke Harms, and Martin
+  Thullner.
+\newblock A reactive transport modeling approach to simulate biogeochemical
+  processes in pore structures with pore-scale heterogeneities.
+\newblock \emph{Environmental Modelling \& Software}, 30:\penalty0 102 -- 114,
+  2012.
+\newblock \doi{10.1016/j.envsoft.2011.10.010}.
+
+\bibitem[He{\ss}e et~al.({2010})He{\ss}e, Harms, Attinger, and
+  Thullner]{Hesse2010}
+Falk He{\ss}e, Hauke Harms, Sabine Attinger, and Martin Thullner.
+\newblock {Linear Exchange Model for the Description of Mass Transfer Limited
+  Bioavailability at the Pore Scale}.
+\newblock \emph{Enviromental Science \& Technology}, {44}\penalty0
+  ({6}):\penalty0 {2064--2071}, {Mar 15} {2010}.
+\newblock ISSN {0013-936X}.
+\newblock \doi{{10.1021/es902489q}}.
+
+\bibitem[Kramer et~al.({2007})Kramer, Kurbanmuradov, and Sabelfeld]{Kramer2007}
+Peter~R. Kramer, Orazgeldi Kurbanmuradov, and Karl Sabelfeld.
+\newblock {Comparative analysis of multiscale Gaussian random field simulation
+  algorithms}.
+\newblock \emph{{Journal of Computational Physics}}, {226}\penalty0
+  ({1}):\penalty0 {897--924}, {Sep 10} {2007}.
+\newblock ISSN {0021-9991}.
+\newblock \doi{{10.1016/j.jcp.2007.05.002}}.
+
+\bibitem[Regnier et~al.({2002})Regnier, O'Kane, Steefel, and
+  Vanderborght]{Regnier2002}
+P~Regnier, JP~O'Kane, CI~Steefel, and P~Vanderborght.
+\newblock {Modeling complex multi-component reactive-transport systems: towards
+  a simulation environment based on the concept of a Knowledge Base}.
+\newblock \emph{{Applied Mathematical Modelling}}, {26}\penalty0
+  ({9}):\penalty0 {913--927}, {Sep} {2002}.
+\newblock ISSN {0307-904X}.
+\newblock \doi{{10.1016/S0307-904X(02)00047-1}}.
+
+\end{thebibliography}

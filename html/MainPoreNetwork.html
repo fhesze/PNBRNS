@@ -1,0 +1,245 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>MainPoreNetwork</title><meta name="generator" content="MATLAB 7.10"><meta name="date" content="2013-05-08"><meta name="m-file" content="MainPoreNetwork"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Overview</a></li><li><a href="#4">Generating the geometry</a></li><li><a href="#8">Assigning the random pore radii</a></li><li><a href="#12">Calculating the flow field</a></li><li><a href="#16">Computing the transport</a></li><li><a href="#20">Postprocessing</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> MainPoreNetwork
+</pre><h2>Overview<a name="3"></a></h2><p>This Matlab file is the main file for a series of files: (i) CreateGeometry.m, where the skeleton of the network is build (ii) RandomField.m, where random values are assigned to each pore (iii) CalculateFlow.m, where the fluid flow is solved for the network and (iv) ComputeTransport.m, where the transport of several species is computed.</p><p>Further details on the used methods can be found in 'A reactive transport modeling approach to simulate biogeochemical processes in pore structures with pore-scale heterogeneities', which can be accessed by <a href="http://dx.doi.org/10.1016/j.envsoft.2011.10.010">http://dx.doi.org/10.1016/j.envsoft.2011.10.010</a></p><p>Copyright (C) 2013  Falk He&szlig;e. The terms of the license agreement can be found in the README.txt.</p><h2>Generating the geometry<a name="4"></a></h2><p>The geometrical parameters are defined as follows:</p><div><ul><li>n, which should be a factor of 4 and represents the X axis</li><li>m, which should be even and represents Y axis and</li><li><img src="MainPoreNetwork_eq90610.png" alt="$$ l_{pore} $$"> , which represents the pore length.</li></ul></div><pre class="codeinput">n               = 120;
+m               = 36;
+l_pore          = 0.001;
+
+GeometryCoeffs  = struct(<span class="string">'xIncr'</span>, n, <span class="string">'yIncr'</span>, m, <span class="string">'LengthOfPore'</span>, l_pore);
+</pre><p>In the first step the raw geometry is generated, having a hexagonal grid and uniform pores of length <img src="MainPoreNetwork_eq90610.png" alt="$$ l_{pore} $$"> .</p><pre class="codeinput">GeometryData    = CreateGeometry(GeometryCoeffs);
+</pre><img vspace="5" hspace="5" src="MainPoreNetwork_01.png" alt=""> <p>This results in a uniform hexagonal grid.</p><h2>Assigning the random pore radii<a name="8"></a></h2><p>The parameters of the random fields are:</p><div><ul><li><img src="MainPoreNetwork_eq17569.png" alt="$$ \lambda_x $$"> , which is the correlation length in the x-direction</li><li><img src="MainPoreNetwork_eq60664.png" alt="$$ \lambda_y $$"> , which is the correlation length in the y-direction</li><li><img src="MainPoreNetwork_eq35250.png" alt="$$ \mu $$"> , which is the expectation value of the random field and</li><li><img src="MainPoreNetwork_eq54623.png" alt="$$ \sigma^2 $$"> , which is the variance of the random field and</li><li><img src="MainPoreNetwork_eq79333.png" alt="$$ func $$"> , which defines the variogram function of the random field.</li></ul></div><pre class="codeinput">lambda_x        = 0.005;
+lambda_y        = 0.005;
+mu              = 0.16e-3;
+sigma2          = 5e-9;
+func            = <span class="string">'Gauss'</span>;
+RandomCoeffs    = struct(<span class="string">'lambda_x'</span>, lambda_x, <span class="string">'lambda_y'</span>, lambda_y, <span class="string">'mu'</span>, mu, <span class="string">'sigma2'</span>, sigma2, <span class="string">'func'</span>, func);
+</pre><p>In the second step random radii values <img src="MainPoreNetwork_eq41782.png" alt="$$ r_j $$"> are assigned to each pore <img src="MainPoreNetwork_eq52129.png" alt="$$ j $$"> of the raw geometry.</p><pre class="codeinput">RadiiData     = RandomField2DUG(GeometryData, RandomCoeffs);
+</pre><img vspace="5" hspace="5" src="MainPoreNetwork_02.png" alt=""> <p>After this step heterogeneous radii are assigned to each pore.</p><h2>Calculating the flow field<a name="12"></a></h2><p>The parameter of the flow field are</p><div><ul><li><img src="MainPoreNetwork_eq64512.png" alt="$$ \Delta p $$">, which is the pressure drop along the geometry.</li></ul></div><pre class="codeinput">delta_p         = 62.15;
+FlowCoeffs      = struct(<span class="string">'delta_p'</span>, delta_p);
+</pre><p>In the third step the volumetric flow <img src="MainPoreNetwork_eq58642.png" alt="$$ q_j $$"> in each pore <img src="MainPoreNetwork_eq52129.png" alt="$$ j $$"> is solved using the HagenePoiseuille equation: <img src="MainPoreNetwork_eq69330.png" alt="$$ q_j = \frac{\pi r^4_j}{8 \nu} \frac{\Delta p_j}{l_{pore}} $$"> . Here <img src="MainPoreNetwork_eq17856.png" alt="$$ \nu $$"> is the dynamic viscosity of water and <img src="MainPoreNetwork_eq56675.png" alt="$$ \Delta p_j $$"> is the pressure drop along pore <img src="MainPoreNetwork_eq52129.png" alt="$$ j $$"> . Mass conservation is achieved by using Kirchhoff's law. The flow direction is assumed to be from the left to the right. The flow is used in order to determine the water velocity <img src="MainPoreNetwork_eq82746.png" alt="$$ u_j = \frac{q_j}{\pi r_j^2} $$"> in each pore <img src="MainPoreNetwork_eq31413.png" alt="$j$">. These data are than used in order to determine the advective transport of each species.</p><pre class="codeinput">FlowData        = CalculateFlow(RadiiData, GeometryData, FlowCoeffs);
+</pre><img vspace="5" hspace="5" src="MainPoreNetwork_03.png" alt=""> <p>After this calculation the flow values are assigned to each pore.</p><h2>Computing the transport<a name="16"></a></h2><p>The parameter of the transport are</p><div><ul><li><img src="MainPoreNetwork_eq72225.png" alt="$$ t_{end} $$">, which is the lenght of the time interval,</li><li><img src="MainPoreNetwork_eq41901.png" alt="$$ t_{0} $$">, which is the beginning of the time interval,</li><li><img src="MainPoreNetwork_eq73091.png" alt="$$ \Delta t $$">, which is the lenght of the step size and</li><li>spec_no, which is the number of chemical species.</li></ul></div><pre class="codeinput">t_end           = 60;
+t_0             = 0;
+Delta_t         = 0.05;
+
+spec_no         = 3;
+
+TransportCoeffs = struct(<span class="string">'tend'</span>, t_end, <span class="string">'time'</span>, t_0, <span class="string">'dt'</span>, Delta_t, <span class="string">'spec_no'</span>, spec_no);
+</pre><p>In the last step the reactive transport for <img src="MainPoreNetwork_eq87857.png" alt="$$ N_{i} $$"> chemical species is solved using the advection-diffusion-reaction equation within each pore <img src="MainPoreNetwork_eq52129.png" alt="$$ j $$"> <img src="MainPoreNetwork_eq90178.png" alt="$$ \frac{\partial}{\partial t} c_{i,j} + \nabla \cdot ( u_j c_{i,j}) = D_i \Delta c_{i,j} + R_{i,j} $$"> . Here <img src="MainPoreNetwork_eq48986.png" alt="$$ t $$"> is the time, <img src="MainPoreNetwork_eq73181.png" alt="$$ c_{i,j} $$"> is the concentration of species <img src="MainPoreNetwork_eq51405.png" alt="$$ i $$"> in pore <img src="MainPoreNetwork_eq52129.png" alt="$$ j $$"> , <img src="MainPoreNetwork_eq31050.png" alt="$$ D_i $$"> is the diffusion cofficient of each species and <img src="MainPoreNetwork_eq85221.png" alt="$$ R_{i,j} $$"> respective production and consumption rate. The last term is computed by virtue of the BRNS libary.</p><pre class="codeinput">TransportData   = ComputeTransport(FlowData, GeometryData, TransportCoeffs);
+</pre><img vspace="5" hspace="5" src="MainPoreNetwork_04.png" alt=""> <img vspace="5" hspace="5" src="MainPoreNetwork_05.png" alt=""> <img vspace="5" hspace="5" src="MainPoreNetwork_06.png" alt=""> <img vspace="5" hspace="5" src="MainPoreNetwork_07.png" alt=""> <p>After this step concetration values for each species are assigned to each pore in each time step.</p><h2>Postprocessing<a name="20"></a></h2><p>Several routines can be preformed here like plotting and saving.</p><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br>
+      Published with MATLAB&reg; 7.10<br></p></div><!--
+##### SOURCE BEGIN #####
+function MainPoreNetwork
+
+%% Overview
+% This Matlab file is the main file for a series of files:
+% (i) CreateGeometry.m, where the skeleton of the network is build
+% (ii) RandomField.m, where random values are assigned to each pore
+% (iii) CalculateFlow.m, where the fluid flow is solved for the network and
+% (iv) ComputeTransport.m, where the transport of several species is
+% computed.
+%
+% Further details on the used methods can be found in 'A reactive transport
+% modeling approach to simulate biogeochemical processes in pore structures
+% with pore-scale heterogeneities', which can be accessed by
+% <http://dx.doi.org/10.1016/j.envsoft.2011.10.010>
+%
+% Copyright (C) 2013  Falk Heße.
+% The terms of the license agreement can be found in the README.txt.
+ 
+
+%% Generating the geometry
+
+%%  
+% The geometrical parameters are defined as follows: 
+%
+% * n, which should be a factor of 4 and represents the X axis
+% * m, which should be even and represents Y axis and
+% * $$ l_{pore} $$ , which represents the pore length.
+%
+
+n               = 120;                                                      
+m               = 36;                                                       
+l_pore          = 0.001;                                                    
+
+GeometryCoeffs  = struct('xIncr', n, 'yIncr', m, 'LengthOfPore', l_pore);
+
+%%
+% In the first step the raw geometry is generated, having a hexagonal grid
+% and uniform pores of length $$ l_{pore} $$ .
+%
+
+GeometryData    = CreateGeometry(GeometryCoeffs);
+
+%%
+% This results in a uniform hexagonal grid.
+%
+
+%% Assigning the random pore radii 
+%
+
+%%
+% The parameters of the random fields are:
+%
+% * $$ \lambda_x $$ , which is the correlation length in the x-direction 
+% * $$ \lambda_y $$ , which is the correlation length in the y-direction
+% * $$ \mu $$ , which is the expectation value of the random field and
+% * $$ \sigma^2 $$ , which is the variance of the random field and
+% * $$ func $$ , which defines the variogram function of the random field.
+%
+
+lambda_x        = 0.005;                                                   
+lambda_y        = 0.005;                                                  
+mu              = 0.16e-3;                                                 
+sigma2          = 5e-9;
+func            = 'Gauss';                                                    
+RandomCoeffs    = struct('lambda_x', lambda_x, 'lambda_y', lambda_y, 'mu', mu, 'sigma2', sigma2, 'func', func);                                 
+
+%%
+% In the second step random radii values $$ r_j $$ are assigned to 
+% each pore $$ j $$ of the raw geometry.
+%
+
+RadiiData     = RandomField2DUG(GeometryData, RandomCoeffs);             
+
+%%
+% After this step heterogeneous radii are assigned to each pore.
+%
+
+%% Calculating the flow field
+
+%%
+% The parameter of the flow field are
+%
+% * $$ \Delta p $$, which is the pressure drop along the geometry.
+
+delta_p         = 62.15;
+FlowCoeffs      = struct('delta_p', delta_p);
+
+%%
+% In the third step the volumetric flow $$ q_j $$ in each pore $$ j $$ is
+% solved using the HagenePoiseuille equation:
+% $$ q_j = \frac{\pi r^4_j}{8 \nu} \frac{\Delta p_j}{l_{pore}} $$ . Here
+% $$ \nu $$ is the dynamic viscosity of water and
+% $$ \Delta p_j $$ is the pressure drop along pore $$ j $$ .
+% Mass conservation is achieved by using Kirchhoff's law.
+% The flow direction is assumed to be from the left to the right.
+% The flow is used in order to determine the water velocity 
+% $$ u_j = \frac{q_j}{\pi r_j^2} $$ in each pore $j$. These data are than
+% used in order to determine the advective transport of each species.
+%
+
+FlowData        = CalculateFlow(RadiiData, GeometryData, FlowCoeffs); 
+
+%%
+% After this calculation the flow values are assigned to each pore.
+%
+
+%% Computing the transport
+
+%%
+% The parameter of the transport are
+%
+% * $$ t_{end} $$, which is the lenght of the time interval,
+% * $$ t_{0} $$, which is the beginning of the time interval,
+% * $$ \Delta t $$, which is the lenght of the step size and
+% * spec_no, which is the number of chemical species.
+%
+
+t_end           = 60;
+t_0             = 0;
+Delta_t         = 0.05;
+
+spec_no         = 3;
+
+TransportCoeffs = struct('tend', t_end, 'time', t_0, 'dt', Delta_t, 'spec_no', spec_no);   
+
+%% 
+% In the last step the reactive transport for $$ N_{i} $$ chemical
+% species is solved using the advection-diffusion-reaction equation within
+% each pore $$ j $$
+% $$ \frac{\partial}{\partial t} c_{i,j} + \nabla \cdot ( u_j c_{i,j}) =
+% D_i \Delta c_{i,j} + R_{i,j} $$ .
+% Here $$ t $$ is the time, $$ c_{i,j} $$ is the concentration of species
+% $$ i $$ in pore $$ j $$ , $$ D_i $$ is the diffusion cofficient of each
+% species and $$ R_{i,j} $$ respective production and consumption rate.
+% The last term is computed by virtue of the BRNS libary.
+%
+
+TransportData   = ComputeTransport(FlowData, GeometryData, TransportCoeffs);
+
+%%
+% After this step concetration values for each species are assigned to each
+% pore in each time step.
+%
+
+%% Postprocessing
+% Several routines can be preformed here like plotting and saving.
+%
+
+
+end
+##### SOURCE END #####
+--></body></html>

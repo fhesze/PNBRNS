@@ -1,0 +1,523 @@
+%\documentstyle[manual]{report}
+\documentclass[12pt]{report}
+\usepackage{manual,epsf,url}
+\usepackage[usenames,dvipsnames]{pstricks}
+\usepackage{epsf, pst-grad, pst-plot, pgf}
+\usepackage{subfigure}
+\usepackage{natbib}
+\usepackage{amsmath,amssymb,amsfonts,latexsym}			% mathematical symbols
+
+\graphicspath{ {fig/} }
+\newcommand*{\PsTricksPath}{pstricks}
+\newcommand*{\BibPath}{bibtex}
+
+\def\QI{{\sc PN-BRNS}}
+\def\VQ{{\sc 4}}
+\def\PC{Paper coordinates}    \def\WC{World coordinates}
+
+%\textheight250mm
+%------------------------------------------------------------------------
+\setcounter{page}{-2}\pagestyle{empty}
+
+\begin{document}
+\ \vskip4cm
+{\centering\huge $\mathrm{PN-BRNS}^{\copyright}$\par}
+\vskip1cm
+{\Large\sc\centering A pore-network model\\
+simulating flow and advectiv-diffusive\\
+transport of chemical species \\
+in heterogeneous pore networks\par}
+
+\vskip15mm
+\begin{center}
+ \epsfysize105mm \epsffile{fig/MainPoreNetwork_07.eps}\par
+\end{center}
+
+\vfill
+{\sf Copyright \copyright Mehdi Gharasoo, Falk He{\ss}e, 2010-2015
+\hfill Version 1.1 23.04.2015}
+
+\break
+
+%------------------------------------------------------------------------
+\begingroup\leftskip=5mm\parindent=0mm\sf\ \vfill
+
+{\large\sc Legal Considerations\par}
+\smallskip
+
+Copyright \copyright\ 2013, Mehdi Gharasoo, Falk He{\ss}e.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+\begin{itemize}
+	\item Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+	\item Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+	\item Neither the name of the Helmholtzcentre for Environmental Reserarch (UFZ) nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+\end{itemize}
+
+\QI\ IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Mehdi Gharasoo OR Falk He{\ss}e BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+\vskip10mm
+
+Martin Thullner\\
+UFZ - Helmhotz Center for Environmental Research\\
+Department of Computational Hydrosystems\\
+Permoserstr.~15\\
+D-04318 Leipzig\\
+GERMANY
+
+{\bigskip\small\par
+\tt e-mail: martin.thullner@ufz.de\\
+}
+
+
+
+\endgroup\break
+
+% \tableofcontents\pagestyle{empty}
+% 
+% \vfill\break
+
+
+\setcounter{page}{1}\pagestyle{plain}
+
+
+\chapter{Introduction and concepts}
+
+\QI\ was created for generating 2-dimensional pore networks and simulating flow and transport. 
+
+\bigskip
+
+The main features of \QI\ are:
+
+\begin{itemize}
+  \item Generation of a two-dimensional hexagonal pore-scale network structure.
+  \item Using randomly assigned radii for the pores. The one-point distribution of the pore radii can either follow a normal or log-normal distribution, whereas the two-point distribution of the radii (variogram, correlation or covariance function) may follow a Gaussian, exponential, power-law or truncated power-law model function. 
+  \item Flow is generated according to a prescribed pressure drop along the flow direction. 
+  \item Reactive transport is computed for a (theoretically) arbitrary number of chemical species.
+\end{itemize}
+
+Additional information on the code and some benchmark calculations are published by \citet{Gharasoo2012}. For more information on the used random field generator we refer to \citep{Kramer2007} as well as the Biogeochemical Reaction Network Simulator, which is used for the solving of the reactive part we refer to \citet{Regnier2002} or \citet{Centler2010}.
+
+% \bigskip
+% {\bf Contributors:} \quad Thanks to Vladyslav ˜Prykhod'ko for implementing several functions. 
+
+\chapter{Installation and Use in a Matlab Environment}
+
+\section{Prerequesits}
+
+To use the functionality of \QI\ you need a working Matlab environment. For the calculation of simple reactive transport simulations you can use the predefined Matlab routines. In case of more complex reaction networks we provide binaries of the Biogeochemical Reaction Network Simulator (BRNS) library. In order to create libraries of BRNS yourself you have to contact Pierre Regnier as the copyright holder. You can however, also use other software and couple it with \QI\ on your own.
+
+\section{Specifying the platform}
+
+Matlab itself is a cross-plaform application available both for Windows-like (Windows XP, Windows Vista, Windows 7) systems as well as Unix-like (Linux, Mac OSX, ) systems. However, both types of operating systems have different implementation of shared libaries, which are used by \QI\ in order to solve the reaction of the transported species. As a result the type of architecture has to be specified. To that end a file called {\tt conf.txt} is used, which is located in the {\tt arch} subdirectory (located in the main directory). In this file the type of the operating system has to be given (windows or unix) as well as the names of the reactive libary and its header file.
+
+
+%------------------------------------------------------------------------
+\chapter{Reference Manual}
+
+
+\section{Basic structure}
+
+\QI\ is made up of several Matlab files, which in conjunction provide the functionality described above. In the following these files are listed and explained.
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/Overview.tex}
+	\caption{Schematic of the different files.}
+	\label{fig:Overview}
+\end{figure}
+
+The first file is {\tt getGeometry.m}, where the skeleton of the network is build (see schematic in Figure \ref{fig:Overview}). In the second step random values are assigned to each pore in the {\tt getRadii.m} file. The flow field is solved for the network in the {\tt getFlow.m} file. In the last step the (reactive) transport for several species is computed in the {\tt getTransport.m} file.
+
+\section{Creating the geometry}
+
+In the first step the raw geometry of the pore space without any additional information is generated. The relevant parameters are
+
+\begin{itemize}
+	\item {\tt n}, which should be a factor of 4 and represents the X axis,
+	\item {\tt m}, which should be even and represents Y axis and
+	\item {\tt l\textunderscore pore}, which represents the pore length $l_{pore}$ in $m$.
+\end{itemize}
+
+These parameters are grouped together and passed to the {\tt getGeometry.m} function. The return value of this function is the {\tt struct} variable {\tt GeometryData} containing the relevant grid data.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{MainPoreNetwork_01}
+	\caption[]{Example geometry of the pore-space network. The used parameters were: {\tt n = 120}, {\tt m = 36} and {\tt l\textunderscore pore = 0.001} (given in meter). This resulted in network with $n_{pore} = 3162$ number of pores and $n_{node} = 2160$ number of nodes. The dimensions were $L_x = 0.09\ m$ and $L_y = 0.03\ m$ in $x$ and $y$ directions respectively.} 
+	\label{fig:geometry}
+\end{figure}
+
+The result is the raw geometry of the pore network(see Figure \ref{fig:geometry}), which is used in the following for the calculation of flow and transport.
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/PoreStructure.tex}
+	\caption{Schematic of the hexagonal pore structure.}
+	\label{fig:PoreStructure}
+\end{figure}
+
+The parameters {\tt n} and {\tt m} need some further explanation since their values do not straight forwardly apply to the generated pore structure. The layout of the structure is a hexagonal honey-comb network of interconnected tubes having an angle of $\varphi = 120^{\circ}$. Here these tubes represent the pores and effects appearing on the nodes are neglected. The hexagonal grid has been chosen over a simpler square grid since the latter produces unphysical effects due to an over-regular structure \citep{Dupin2001}.
+
+A schematic representation of the hexagonal layout of the pore network can be seen in Figure \ref{fig:PoreStructure}, where the dotted lines represent the hypothetical grid, along which the pores are arranged. The values {\tt n} and {\tt m} are therefore the number of these lines of this hypothetical square grid. A single hexagonal pore therefore needs {\tt n = 4} and {\tt m = 3}. Due to reasons regarding symmetry the parameter {\tt n} should always be a multiple of 4 and {\tt m} being a multiple of 2. 
+
+As a result of this design decision, it is also not straight forward to compute the number of pores or the physical dimensions of the network, which are generated for a given {\tt n} and {\tt m}. Whereas the number of nodes is simply $ n_{node} = n\ m/2 $, the number of pores can be calculated according to $ n_{pore} = n/2 (m-1) + (n/2-1) \rm{ceil}(m/2)$, where $\rm{ceil}$ rounds towards minus infinity. The lenght $L_x$ and height $L_y$ of the generated pore network can be calculated according to $L_x = l_{pore} ((n/2 - 1)1.5) + 0.5$ and $L_y = (m - 1)\sin(\varphi)$. If the physical dimensions are given, the necessary number of elements can be computed according to $n = 4/3(L_x/l_{pore} - 0.5) + 2$ and $m = L_y/\sin(\varphi) + 1$. Both values should be rounded such that above conditions are meet.
+
+\section{Assigning random pore radii to the geometry}
+
+In the second step random pore radii are generated by the function {\tt getRadii.m} in order to get a heterogeneous pore space. The relevant parameters are
+
+\begin{itemize}
+	\item {\tt lambda\_x}, i.e. the correlation length $\lambda_x$ in the x-direction,
+	\item {\tt lambda\_y}, i.e. the correlation length $\lambda_y$ in the y-direction,
+	\item {\tt mu}, i.e. the expectation value $\mu$ of the random field,
+	\item {\tt sigma2}, i.e. the variance $\sigma^2$ of the random field and
+	\item {\tt func}, which defines the variogram function of the random field. 
+	\item The type of the one-point distribution.
+\end{itemize}
+
+These parameters are again grouped in a {\tt struct} variable called {\tt RadiiCoeffs}. The return value of the {\tt getRadii.m} function is a list containing the pore radii of every pore.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{MainPoreNetwork_02}
+	\caption[]{Example geometry of the pore-space network with heterogeneous distributed pore radii. The used parameters were: $\lambda_x = \lambda_y = 0.005$, $\mu = 0.16\ 10^{-3}$ and $\sigma^2 = 5\ 10^{-9}$. The field was log-normally distributed and had a Gaussian variogram.}
+	\label{fig:radii}
+\end{figure}
+
+The function uses a random field generator, which can provide random values for the pores. The position is taken to be at the center of each pore. The field generator can provide both a normal as well as a log-normal distribution for the point values. For the variogram several model functions can be generated: a Gaussian, an exponential, a power law as well as a truncated power law. The generator can also provide isotropic and anisotropic fields.
+
+\section{Computing the flow field}
+
+In the third step the velocity field is generated and assigned to every pore $j$ in the network by the function {\tt getFlow.m}. The relevant parameters are
+
+\begin{itemize}
+	\item  {\tt delta\_p}, which is the pressure drop $\Delta P$ along the whole geometry.
+\end{itemize}
+
+Since the flow direction is assumed to be from the left to the right, $\Delta p$ is defined accordingly. The flow parameters are again grouped in a {\tt struct} variable called {\tt FlowCoeffs}. The return value of the {\tt getFlow.m} function is a list containing the flow velocities in every pore.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{MainPoreNetwork_03}
+	\caption[]{Example geometry of the pore-space network with heterogeneous distributed pore radii. The used parameters were: $\lambda_x = \lambda_y = 0.005$, $\mu = 0.16\ 10^{-3}$ and $\sigma^2 = 5\ 10^{-9}$. The field was log-normally distributed and had a Gaussian variogram.}
+	\label{fig:flow}
+\end{figure}
+
+For the solution the Hagen Poiseuille equation is used in order to compute the volumetric flow in each pore:
+
+$$
+	q_j = \frac{\pi r^4_j}{8 \nu} \frac{\Delta p_j}{l_{pore}}.
+$$
+
+Here $\nu$ is the dynamic viscosity of water and $\Delta p_j $ is the pressure drop along pore $j$. Interpreting above equation by using Darcy's law we get $K = (\pi r^4_j/8 \nu l_{pore})$ as the conductivity of each pore. Mass conservation is achieved by using Kirchhoff's law, i.e. $q_{j,1} + q_{j,2} + q_{j,3} = 0$ in case of a hexagonal grid (see Figure \ref{fig:PoreStructure}). By virtue of Kirchoff's law and using above equation one can derive a system of $n_{pore}$ equations, which can be solved for the $n_{pore}$ unknowns of $q_j$.
+
+The flow is then used in order to determine the water velocity in each pore $j$ according to
+
+$$ 
+	u_j = \frac{q_j}{\pi r_j^2}. 
+$$ 
+
+These data are then used in order to determine the advective transport of each species.
+
+\section{Solving the transport}
+
+In the fourth step the time-dependent (reactive) transport is solved for a number of $n_{spec}$ chemical species in each pore $j$ in the function {\tt getTransport.m}. The relevant parameters used for the solution of the transport are
+
+\begin{itemize}
+	\item {\tt t\_end}, which is the length of the time interval,
+	\item {\tt t\_0}, which is the beginning of the time interval,
+	\item {\tt dt}, which is the length of the step size $\Delta t$ and
+	\item {\tt spec\_no}, which is the number $n_{spec}$ of chemical species.
+\end{itemize}
+
+These parameters are again grouped in a {\tt struct} variable called {\tt TransportCoeffs}. The return value of the {\tt getTransport.m} function is a list containing the concentration values of every species $i$ in every pore $j$.
+
+\begin{figure}[ht]
+	\subfigure
+	{\includegraphics[width=0.5\textwidth]{MainPoreNetwork_04}}\hfill
+	\subfigure
+	{\includegraphics[width=0.5\textwidth]{MainPoreNetwork_05}}\\
+	\subfigure
+	{\includegraphics[width=0.5\textwidth]{MainPoreNetwork_06}}\hfill
+	\subfigure
+	{\includegraphics[width=0.5\textwidth]{MainPoreNetwork_07}}
+	\caption{Transport of a conservative tracer at four consecutive time steps.}
+	\label{fig:transport}
+\end{figure}
+
+The transport step is solved using the advection-diffusion-reaction equation within each pore $j$, i.e.
+
+\begin{equation}\label{eq:adr_equation}
+	\frac{\partial}{\partial t} c_{i,j} = - \frac{\partial}{\partial x_L} \cdot ( u_j c_{i,j}) + D_i \left( \frac{\partial^2}{\partial x_L^2} + \frac{\partial^2}{\partial x_T^2} \right) c_{i,j} + r_{i,j}.
+\end{equation}
+
+
+Here $t$ is the time, $c_{i,j}$ is the concentration of species $i$ in pore $j$, $D_i$ is the diffusion coefficient of each species and $R_{i,j}$ the respective production and consumption rate. Several methods can be employed for the reaction part. The directions $x_L$ and $x_T$ are the longitudinal and transversal directions within each pore. Two different scenarios are possible according to the hexagonal geometry (see Figure \ref{fig:PoreStructure}): (i) a horizontal pore, were $x_L = x$ and $x_T = y$ as well as (ii) an inclined pore, were $x_L$ and $x_T$ are inclined, too.
+
+Instead of the full two-dimensional system given by Equation (\ref{eq:adr_equation}) we only solve a one-dimensional system averaged along the width of the pore. This sytem is given by the following expression
+
+\begin{equation}\label{eq:adr_equation_av}
+	\frac{\partial}{\partial t} {\bf C}_{\rm{j}} = - \frac{\partial}{\partial x_L} \cdot ( {\bf U}_{\rm{j}} {\bf C}_{\rm{j}}) + {\bf D} \frac{\partial^2}{\partial x_L^2} {\bf C}_{\rm{j}} + {\bf R}_{\rm{j}}.
+\end{equation}
+
+Here ${\bf C}_{\rm{j}}$ is the list of the averaged concentration of all species and ${\bf U}_{\rm{j}}$, ${\bf D}$ and ${\bf R}_{\rm{j}}$ are lists of the appropriate velocity, diffusion and reaction components. For a derivation of this coefficient functions we refer to \citep{Hesse2010}.
+
+In order to solve Equation (\ref{eq:adr_equation_av}) for every pore a simple operator splitting procedure is applied, where the different terms like advection, longitudinal diffusion as well as reaction are solved successively. For the discretization of the time derivative a simple explicit Euler scheme is employed, i.e.
+
+$$
+	\frac{\partial}{\partial t} {\bf C}_{\rm{j}} \approx \frac{\Delta {\bf C}_{\rm{j}}}{\Delta t} = \frac{{\bf C}_{\rm{j}}^{\rm{n}} - {\bf C}_{\rm{j}}^{\rm{n} - 1}}{\Delta t} .
+$$
+
+In order to avoid unstable solutions, which may arise with this method, the Courant-Friedrichs-Levy conditions must be meet. 
+
+\paragraph*{Advection}
+
+According to Equation (\ref{eq:adr_equation_av}) we get for the advection the following expression
+
+$$
+	 \left( \frac{\partial}{\partial t} {\bf C}_{\rm{j}} \right)_{\rm{adv}} = - \frac{\partial}{\partial x_L} \cdot ({\bf U}_{\rm{j}} {\bf C}_{\rm{j}}).
+$$
+
+Like the time derivative, the spatial derivative in this expression is also approximated by using a difference method, i.e. the differential is replaced with a difference, leading to the following expression
+
+\begin{subequations}
+\begin{align}
+	 \left( \Delta {\bf C}_{\rm{j}} \right)_{\rm{adv}} & = - \frac{\Delta t}{ \Delta x } {\bf U}_{\rm{j}} ({\bf C}^{\rm{n} - 1}_{\rm{in, j}} - {\bf C}^{\rm{n} - 1}_{\rm{j}}) \\
+	 {\bf C}_{\rm{in}} & = \frac{\sum q_k {\bf C}_k}{ \sum q_k } 
+\end{align}
+\end{subequations}
+
+Here the ${\bf C}_{\rm{in, j}}$ is the list of inlet concentrations for each pore $j$. Due to the hexagonal geometry the calculation depends on the type of node.
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/PoreStructure02.tex}
+	\caption{The two different node types of the hexagonal geometry structure.}
+	\label{fig:PoreStructure02}
+\end{figure}
+
+Two different types of nodes can be distinguished (see Figure \ref{fig:PoreStructure02}). The first type is where a horizontal pore is branching into two inclined pores. Every inclined pore therefore has only one inlet and the concentration is divided according to the fluxes. The second type of node is where two inclined pores merge into one horizontal pore. Here the inlet concentration is derived by summing up both predecessing concentration according to the fluxes.  
+
+\paragraph*{Longitudinal Diffusion}
+
+According to Equation (\ref{eq:adr_equation_av}) we get for the longitudinal diffusion the following expression
+
+$$
+	 \left( \frac{\partial}{\partial t} {\bf C}_{\rm{j}} \right)_{\rm{dif_L}} = {\bf D} \frac{\partial^2}{\partial x_L^2} {\bf C}_{\rm{j}}.
+$$
+
+Like in case of the advective flux we chose again a difference approximation leading to the following expression
+
+$$
+	\left( \Delta {\bf C}_{\rm{j}} \right)_{\rm{dif_L}} =  \Delta t {\bf D} \frac{ {\bf C}^{\rm{n} - 1}_{\rm{j-1}}  - 2 {\bf C}^{\rm{n} - 1}_{\rm{j}} + {\bf C}^{\rm{n} - 1}_{\rm{j-1}} }{\Delta x^2/2 },
+$$
+
+where ${\bf C}_{\rm{j-1}}$ and ${\bf C}_{\rm{j+1}}$ are the concentrations at the upstream and downstream nodes respectively. 
+
+\paragraph*{Transversal Diffusion}
+
+No transversal diffusion is featured in Equation (\ref{eq:adr_equation_av}) due to the averaging across the width of the pore.
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/PoreStructure03.tex}
+	\caption{Discrimination of upper and lower pore regions in order to emulate transversal diffusion.}
+	\label{fig:PoreStructure03}
+\end{figure}
+
+We can however, define an upper and a lower concentration for each pore $j$ (see Figure \ref{fig:PoreStructure03}) leading to the following approximation of the transversal diffusion
+
+$$
+	 \left( \frac{\partial}{\partial t} {\bf C}_{\rm{j}} \right)_{\rm{dif_T}} = {\bf D} \frac{\partial^2}{\partial x_T^2} {\bf C}_{\rm{j}}.
+$$
+
+Like in case of the longitudinal diffusional flux we chose again a difference approximation leading to the following expression
+
+$$
+	\left( \Delta {\bf C}_{\rm{j}} \right)_{\rm{dif_T}} = \Delta t {\bf D} \frac{\pi^2}{4} \frac{ \left( {\bf C}^{\rm{n} - 1}_{\rm{up,j}} - {\bf C}^{\rm{n} - 1}_{\rm{down,j}} \right)}{\Delta y^2_{\rm{j}}/2},
+$$
+
+where $\Delta y_{\rm{j}}$ is the width of the pore $j$ and ${\bf C}_{\rm{up,j}}$ and ${\bf C}_{\rm{down,j}}$ are the concentrations at the upper and lower part of the pore $j$ respectively. 
+
+To fully implement upper and lower pore regions the advective part had to be adapted as well. The Kirchoff rule for the different nodes have therefore to be rewritten dependent on the node type.
+
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.8\textwidth]{node_types_02}
+	\caption[]{Graphical representation of the different node types. The color of the pore denotes the type of inlet node, i.e. the node upstream of the pore. Yellow pores are straight pores with two inlets. Green pores are tilted pores with two inlets. Red pores are pores with one inlet. The arows indicate the flow direction.} 
+	\label{fig:node_types}
+\end{figure}
+
+Even in a simple hexagonal structure with uniform mean average flow, the situation is complex due to different flow paths that the solute can take (see Figure \ref{fig:node_types}). For the geometry as well as the used boundary conditions several types of nodes can therefore be distinguished. 
+
+\begin{figure}[ht]
+	\subfigure
+	{\input{\PsTricksPath/node_type_01.tex}} \hfill
+	\subfigure
+	{\input{\PsTricksPath/node_type_03.tex}}
+	\caption{Type I, Type II, Type III and Type IV nodes.}
+	\label{fig:node_type_01}
+\end{figure}
+
+The most simple type is the inlet type (Type I in Figure \ref{fig:node_type_01}) as well as pores at the upper and lower boundary of the medium (Type II in Figure \ref{fig:node_type_01}). Here no adjustments are necessary, since the ilet and outlet pores connect in a simple forward manner.
+
+The second most simple type are nodes, where the upstream pores are all left of the pore. These can be either a titlted pore with one inlet from a straight pore (Type III in Figure \ref{fig:node_type_01}) or a straigth pore with two inlets from tilted pores (Type IV in Figure \ref{fig:node_type_01}). Note that in a medium without complex flow paths, this would already cover all possible node types. All additional node types are therefore due to downwards or upwards flow. The resulting node types are consequently indetical to the one of these two node types, but with different arrangements of pores.
+
+\paragraph*{Type III node} In case of a Type III node, we can still use Kirchhoff' Theorem to determine the overall average concentration. For a pore with a single upstream pore the inlet concentration is simply the same concentration as the outlet concentration of the upstream pore so
+
+$$
+	{\bf C}_1 = {\bf C}_3
+$$
+
+for the upwards pointing pore and 
+
+$$
+	{\bf C}_2 = {\bf C}_3
+$$
+
+for the downwards pointing pore. In case of pores, separated into upper and lower parts, this relationship must still be true for average concentrations within the pores. The task is therefore to use this fact and adapt it to the new situation, with it much more complex array of channels within each pore. 
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/cIn_single_inlet.tex}
+	\caption{Distribution of inlet concentrations for a single inlet pore.}
+	\label{fig:cIn_single_inlet}
+\end{figure}
+
+This array of channels as well as the respective concentrations within each channel is displayed in Figure \ref{fig:cIn_single_inlet}. Two cases can be distinguished, depending wether Pore 2 or Pore 3 is bigger (compare Figure \ref{fig:node_type_01} and \ref{fig:cIn_single_inlet}). Since the amount of solute entering each pore is determined by the flux, we can define the ratios according to
+
+\begin{subequations}
+\begin{align}
+	 p & = \frac{q_2}{q_1 + q_2} = \frac{q_2}{q_3} \\
+	 q & = \frac{q_1}{q_1 + q_2} = \frac{q_2}{q_3} = 1 - p
+\end{align}
+\end{subequations}
+
+The total amount of mass leaving the incoming pore is given by the average concentration. The partition of these mass into each channel in the outletting pores is then determined according to the two cases mentionned above. In the first case, i.e. for $q>p$
+
+\begin{subequations}
+\begin{align}
+	m_{2,\rm{down}} = & \frac{p}{2} C_{\rm{in, down}} + 0\ C_{\rm{in, up}} \\
+	m_{2,\rm{up}}   = & \frac{p}{2} C_{\rm{in, down}} + 0\ C_{\rm{in, up}} \\
+	m_{1,\rm{down}} = & \left( \frac12 - p \right) C_{\rm{in, down}} + \frac{p}{2} C_{\rm{in, up}} \\
+	m_{1,\rm{up}}   = & 0\ C_{\rm{in, down}} + \frac{q}{2} C_{\rm{in, up}}
+\end{align}
+\end{subequations}
+
+as well as in case two,  i.e. for $p > q$
+
+\begin{subequations}
+\begin{align}
+	m_{2,\rm{down}} = & \frac{p}{2} C_{\rm{in, down}} + 0\ C_{\rm{in, up}} \\
+	m_{2,\rm{up}}   = & \frac{q}{2} C_{\rm{in, down}} + \left( \frac12 - q \right) C_{\rm{in, up}} \\
+	m_{1,\rm{down}} = & 0\ C_{\rm{in, down}} + \frac{q}{2} C_{\rm{in, up}} \\
+	m_{1,\rm{up}}   = & 0\ C_{\rm{in, down}} + \frac{q}{2} C_{\rm{in, up}}
+\end{align}
+\end{subequations}
+
+Using these values, the proportions of each channel are determined and can be assigned.
+
+%The cases of pore at the upper and lower boundary of the medium are special since they have only one predecessor by definition. This case is however, simple (the chemical species are only passed from one pore to the next) and therefore not repeated here.
+
+\paragraph*{Type IV node} In case of a Type IV node, we first can determine the overall solute flux into the pore according to Kirchhoff's law. Using the notation given in Figure \ref{fig:node_type_01} (b) we can write
+
+\begin{subequations}
+\begin{align}
+	{\bf C}_3 q_3 & =  {\bf C}_1 q_1 + {\bf C}_2 q_2 \\
+	({\bf C}_{\rm{up,3}} + {\bf C}_{\rm{down,3}}) & =  \frac{({\bf C}_{\rm{up,1}} + {\bf C}_{\rm{down,1}}) q_1 + ({\bf C}_{\rm{up,2}} + {\bf C}_{\rm{down,2}}) q_2}{q_3}.
+\end{align}
+\end{subequations}
+
+This means, we need an additional equation for the determination of the individual concentrations in the downstream pore.
+
+\begin{figure}[ht]
+	\centering
+	\input{\PsTricksPath/cIn_double_inlet.tex}
+	\caption{Distribution of inlet concentrations for a double inlet pore.}
+	\label{fig:cIn_double_inlet}
+\end{figure}
+
+The motivation for the derivation of this equation is shown in Figure \ref{fig:cIn_double_inlet}. In this picture, the four different bars represent the four concentration values in the two upstream pores of the node. The width of the bars is corresponding to the fluxes in the incoming pores and the median of the x-axis shows the partition of these fluxes to the outletting pore. There two different case are distinguished: First, where the flux of Pore $1$ is smaller than in Pore $2$ and second, where the opposite is the case. The taks is now to compute the relative contribution of the incoming concentrations to the outgoing upper and lower pore. This latter is specified in Figure by the hatched area. Using this information, it is clear that the normalized incoming concentration, i.e. the area underneath the curve is 
+
+$$
+	m = \frac{p}{2} C_{\rm{in_1, down}} + \frac{p}{2} C_{\rm{in_1, up}} + \frac{q}{2} C_{\rm{in_2, down}} + \frac{q}{2} C_{\rm{in_2, up}},
+$$
+
+with $p = q_1/q_3$ and $q = 1 - p = q_2/q_3$ being the ratios of the respective incoming fluxes to the total incoming flux. The area underneath the hatched is then in case one, i.e. for $q > p$
+
+\begin{subequations}
+\begin{align}
+	m_{\rm{down}} = & \frac{p}{2} C_{\rm{in_1, down}} + \frac{p}{2} C_{\rm{in_1, up}} + \left(\frac12 - p \right) C_{\rm{in_2, down}} + 0\ C_{\rm{in_2, up}} \\
+	m_{\rm{up}}   = & 0\ C_{\rm{in_1, down}} + 0\ C_{\rm{in_1, up}} + \left(\frac12 - \frac{q}{2} \right) C_{\rm{in_2, down}} + \frac{q}{2} C_{\rm{in_2, up}}
+\end{align}
+\end{subequations}
+
+as well as in case two,  i.e. for $p > q$
+
+\begin{subequations}
+\begin{align}
+	m_{\rm{down}} = & \frac{p}{2} C_{\rm{in_1, down}} + \left(\frac12 - \frac{p}{2} \right) C_{\rm{in_1, up}} + 0\ C_{\rm{in_2, down}} + 0\ C_{\rm{in_2, up}} \\
+	m_{\rm{up}}   = & 0\ C_{\rm{in_1, down}} +  \left(\frac12 - q \right) C_{\rm{in_1, up}} + \frac{q}{2} C_{\rm{in_2, down}} + \frac{q}{2} C_{\rm{in_2, up}}.  
+\end{align}
+\end{subequations}
+
+The above equations can be interepreted as a scalar product of two vectors. Let us therefore introduce the following convention
+
+$$
+	C_{\rm{in}} = \left( \begin{array}{c} C_{\rm{in_1, down}}\\ C_{\rm{in_1, up}}\\ C_{\rm{in_2, down}}\\ C_{\rm{in_2, up}}\\ \end{array} \right)
+$$
+
+Using the above equations as well as this notation, we can derive the relative contribution of the two concentrations for the case of $q > p$ by
+
+$$
+	r = \frac{m_{\rm{down}}}{m} = \frac{ \left( \frac{p}{2}\ \frac{p}{2}\ (\frac12 - p)\ 0 \right) \cdot C_{\rm{in}} }{ \left( \frac{p}{2}\ \frac{p}{2}\ \frac{q}{2}\ \frac{q}{2} \right) \cdot C_{\rm{in}} }
+$$
+
+as well as in case $p > q$
+
+$$
+	r = \frac{m_{\rm{down}}}{m} = \frac{ \left( \frac{p}{2}\ \left(\frac12 - \frac{p}{2} \right) 0\ 0 \right) \cdot C_{\rm{in}} }{ \left( \frac{p}{2}\ \frac{p}{2}\ \frac{q}{2}\ \frac{q}{2} \right) \cdot C_{\rm{in}} }
+$$
+
+Note that the case of $p = q$ is already covered, since it means that the concentrations are divided up according to the pore connected upstream to the pore.
+
+Now that the relative contribution of the two incoming pores to the upper and lower channel of the outgoing pore has been determined, we can state the equation for the calculation of the respective channel concentrations
+
+\begin{subequations}
+\begin{align}
+	C_{\rm{out,down}} = & 2\ C_{\rm{out,down}}\ r \\
+	C_{\rm{out,up}}   = & 2\ C_{\rm{out,down}}\ (1 - r).  
+\end{align}
+\end{subequations}
+
+\paragraph*{Type V node}
+
+\begin{figure}[ht]
+	\subfigure
+	{\input{\PsTricksPath/node_type_05.tex}} \hfill
+	\subfigure
+	{\input{\PsTricksPath/node_type_07.tex}}
+	\caption{Type V, Type VI, Type VII and Type VIII nodes.}
+	\label{fig:node_type_05}
+\end{figure}
+
+\paragraph*{Reaction}
+
+In the conservative case, i.e. without reaction, the code can already compute the movement of a tracer. For simple reactions or reaction networks matlab code can be written by the user. In case of more complex reaction networks we can provide binaries of a library, which can solve a variety of reactions, which are described by algebraic terms or kinetic non-equilibrium reactions given by ordinary differential equations. These libraries have been generated by encapsulating the reactive module of the Biogeochemical Reaction Network Simulator (BRNS). In order to generate libraries on your own you need to contact Pierre Regnier, who holds all property rights to the software as well as Florian Centler, who generated the libraries. As an alternative you can use any other reaction network simulator and connect it to this code.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% backmatter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{\BibPath/PDF}
+
+
+\end{document}
+
+

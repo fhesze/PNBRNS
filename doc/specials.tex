@@ -1,0 +1,140 @@
+\pagebreak
+
+\section{Special routines}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND PRIVAT
+void DLine(int x1,int y1,int x2,int y2,image\_cc *image, int val)
+}{              % TEXT
+Draws a line from x1/y1 to x2/y2.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{x1,y1} {Coordinates of one end of the line \dots }
+\argu{x2,y2} {\dots and the other.}
+\argu{image} {Pointer to the image.}
+\argu{val} {Pixel value of the line $\in [0, 255]$.}
+\return pointer to the new image.
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+image\_cc *GetVoronoiTes(int Xdim, int Ydim , int Nump)$^8$
+}{              % DESCRIPTION
+ Generates a Voronoi tesselation based on {\tt NumP} random seed point. In the resulting image the Voronoi-cells are marked by different grey levels [1-254], the edges between the cells are white [255]. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{Xdim}{x-size of resulting image }
+\argu{Ydim}{y-size of resulting image }
+\argu{Nump}{number of seed points }
+\return{pointer to the resulting image}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+image\_cc *GetPercolClus(int width, int height, double lamx, double lamy, int mode)$^8$
+}{              % DESCRIPTION
+Returnes a percolation cluster based on the excursion set of a random greyscale image  
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{width, height}{size of image}
+\argu{lamx, lamy}{Correlation length in x and y}
+\argu{mode}{0: random (correlation lengths have no meaning)\\ 
+            1: gaussian covariance with correlation lengths }
+\return{pointer to the binary image of resulting percolation cluster}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void bObjects(image\_cc *image,unsigned long *o,unsigned long *l)}{
+Counts the number of objects (disconnected parts) and the number of loops (holes within the objects for the dark phase (0) of a binary image. 
+
+\medskip
+\argu{image} {Pointer to the image description structure.}
+\argu{o} {Pointer to the number of objects.}
+\argu{l} {Pointer to the number of loops.} 
+
+\medskip
+The edges of the image should be set to non phase (255)
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{int bContour(int x, int y, unsigned char mark, image\_cc *image)}{
+Marks the edge of an object of the dark phase (0) of a binary image and determines if it is the outer edge of an object or the edge of a hole within the object.  
+
+\medskip
+\argu{x} {x coordinate at the edge of an object.}
+\argu{y} {y coordinate at the edge of an object.}
+\argu{mark} {value to mark the edge $0<$mark$<255$.} 
+\argu{image} {Pointer to the image description structure.}
+\return negativ if the marked edge is a hole, positiv else.
+} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+int bContourCent(int x, int y, int mark, image\_cc *image, int *xx, int *yy)
+}{              % TEXT
+Determines the geometrical center of an object or a hole within an object, where an object is defined by a values $<$ {\tt mark}. The value of the center is set to {\tt mark+1}, the pixels at the borders to {\tt mark}.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{x,y} {Coordinates at the border of an object.}
+\argu{mark} {Threshold defining the objects.}
+\argu{xx, yy} {Adresses to which the coordinates of the object are written.}
+\return{$>0$ for real objects, $<=0$ if the contoured border line describes a hole in an object.}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{double pDisector(image\_cc *wnd1, image\_cc *wnd2)}{
+Calculates an unbiased estimate for the volumetric 3D Euler number [L$^{-3}$] of the dark phase (0)  from a pair of parallel binary images (a disector). Note that the resolution of the images must be set. The separation of the parallel images should be smaller than the objects considered.   
+
+\medskip
+\argu{wnd1} {Pointer to the first image description structure.} 
+\argu{wnd2} {Pointer to the image description structure of a parallel image.}
+\return volumetric Euler number.
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+double BtdDiffusionZ(image\_cc *in, FILE *dif, unsigned long max, unsigned long min, int fluxstep, double sens);
+}{              % DESCRIPTION
+Calculates diffusion through phase [1] in z-direction. The concentration at one side is kept fixed, $C(z=0)=$const, while the opposite side is fixed at zero $C(z=z_{max})= 0$. Diffusive flow across the plane $z_{max}$ is calculated iteratively using explicite finite differences. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*in}{Pointer to the 3D binary image}
+\argu{*dif}{Pointer to the file where the diffusive flow is stored in intervals indicated by {\tt fluxstep}}
+\argu{max}{Maximum number of iterations (depends on sample size, may be 50.000 to 1.000.000)}
+\argu{min}{Minimum number of iterations }
+\argu{fluxstep}{Interval of iterations to store the diffusive flux at z=zmax (e.g. 100)}
+\argu{sens}{Interupt criteria: stop iterations if  flux[j]-flux[j-1] $<$ flux[j]*sens }
+\return{Relative apparent diffusion coefficient $D_s/D_0$ }
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+void BtdSkelet(image\_cc *im, int mode, int deadends);
+}{              % DESCRIPTION
+Transform the image to its 3D skeleton. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the 3D binary image.}
+\argu{mode}{0 = 6 neighbors are considered to be connected, 26 else}
+\argu{deadends}{0 = the minimum skeleton without any dead ends is calculated, else, dead ends are preserved}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{void BtdContinuity(image\_cc *im,int mode)}{
+Filter for the continuous part of the phase coded by [1] within a binary 3D-image. 
+The bit-sequenze of{\tt mode} determins the faces of the 3D-image to which the phase must be connected. (mode=1: face at x=0; mode=63: any face).
+
+\medskip
+\argu{im} {Pointer to the 3D image}
+\argu{mode} {bitposition:face\quad 1:x=0, 2:x=xmax, 3:y=0, 4:y=ymax, 5:z=0, 6:z=zmax }
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+void BtdDrawSphere(image\_cc *image,  int xmid, int ymid, int zmid, int rad,  int val);
+}{              % DESCRIPTION
+Draws a sphere at center {\tt xmid/xmid/zmid} with radius {\tt rad} and value 0 if {\tt val}$=$ 0 and 1 else. 
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the 3d binary image}
+\argu{ xmid, xmid, zmid}{coordinates of sphere center}
+\argu{rad}{radius of sphere}
+\argu{val}{value to be written for the sphere}
+}

@@ -1,0 +1,1039 @@
+%15 July 2010, Mehdi Gharasoo
+%Final version of 2D Hexagonal pore network
+% 7 march 2011, IBM complete
+tic
+clear all
+%close all
+%clc
+n=68;%132;%120;    % n should be a factor of 4, represents X axis
+m=60;%120;%36;    %m should be even, represents Y axis
+nodes=zeros(m,n);  %in the matrix, m represents y-axis and n does x-axis
+actnodes=m*n/2;  %only when n is factor of 4
+
+x_actnode=zeros(actnodes,1);
+y_actnode=zeros(actnodes,1);
+
+yx_actnodecon=cell(actnodes,3);
+
+pores_no=n/2*(m-1)+(n/2-1)*fix(m/2);
+pore_pos=zeros(pores_no,4);
+%ver 1.6, to define the type of pore in 3rd colomn
+% to define if pores connected to BCs (BC1 or BC2 or ...) in 4th colomn
+pore_iter=0;
+
+%make sure this value is equal to what u have in your random generator
+%make sure ur pore length, dt and pore radi make sence
+porelength=.001;
+mean_radi=160e-6;
+
+realX = [repmat([porelength/2 porelength],1,n/2) porelength/2];
+node_realX=zeros(actnodes,1);
+node_realY=zeros(actnodes,1);
+
+stateoddX=1;
+for i=1:n
+    if i/2 ~= round(i/2)    %odd x
+        for j=1:m/2
+
+            if stateoddX==1; k=2*j-1;stateevenX=2;else k=2*j;stateevenX=4;end       %k is actual y-axis position of active node
+            actnodeno=j+m/2*(i-1);
+            nodes(k,i)=actnodeno;
+            x_actnode(actnodeno)=i;
+            y_actnode(actnodeno)=k;
+
+            %------------real position of nodes -------------
+            node_realX(actnodeno)=sum(realX(1:i-1));
+            node_realY(actnodeno)=(k-1)*sqrt(3)*porelength/2;
+            %------------------------------------------------
+
+            yx_actnodecon{actnodeno,1}=[k+1,i+1];
+            yx_actnodecon{actnodeno,2}=[k-1,i+1];
+            yx_actnodecon{actnodeno,3}=[k,i-1];
+        end
+
+    else    %even x
+        for j=1:m/2
+            if stateevenX==2; k=2*j;stateoddX=3;else k=2*j-1;stateoddX=1;end    %k is actual y-axis position of active node
+            actnodeno=j+m/2*(i-1);
+            nodes(k,i)=actnodeno;
+            x_actnode(actnodeno)=i;
+            y_actnode(actnodeno)=k;
+
+            %------------real position of nodes -------------
+            node_realX(actnodeno)=sum(realX(1:i-1));
+            node_realY(actnodeno)=(k-1)*sqrt(3)*porelength/2;
+            %------------------------------------------------
+
+            i2=actnodeno;
+            %because all nodes around are Fard nodes, we use the k=2*j-1 to
+            %find the actual number of it for
+
+            yx_actnodecon{actnodeno,1}=[k-1,i-1];%((---1---))
+
+            if y_actnode(actnodeno)~=1
+                pore_iter=pore_iter+1;
+                pore_pos(pore_iter,2)=i2;            %pore ended node, even X
+                if stateevenX==2
+                    pore_pos(pore_iter,1)=(yx_actnodecon{i2,1}(1)+1)/2+m/2*(yx_actnodecon{i2,1}(2)-1);%j=(k+1)/2 from k=2*j-1
+                else
+                    pore_pos(pore_iter,1)=yx_actnodecon{i2,1}(1)/2+m/2*(yx_actnodecon{i2,1}(2)-1);%j=k/2 from k=2*j
+                end
+                pore_pos(pore_iter,3)=1;
+            end
+
+            yx_actnodecon{actnodeno,2}=[k+1,i-1];%((---2---))
+
+            if y_actnode(actnodeno)~=m
+                pore_iter=pore_iter+1;
+                pore_pos(pore_iter,2)=i2;            %pore ended node, even X
+                if stateevenX==2
+                    pore_pos(pore_iter,1)=(yx_actnodecon{i2,2}(1)+1)/2+m/2*(yx_actnodecon{i2,2}(2)-1);%j=(k+1)/2 from k=2*j-1
+                else
+                    pore_pos(pore_iter,1)=yx_actnodecon{i2,2}(1)/2+m/2*(yx_actnodecon{i2,2}(2)-1);%j=k/2 from k=2*j
+                end
+                pore_pos(pore_iter,3)=2;
+            end
+
+            yx_actnodecon{actnodeno,3}=[k,i+1];%((---3---))
+
+            if x_actnode(actnodeno)~=n
+                pore_iter=pore_iter+1;
+                pore_pos(pore_iter,2)=i2;            %pore ended node, even X
+                if stateevenX==2
+                    pore_pos(pore_iter,1)=yx_actnodecon{i2,3}(1)/2+m/2*(yx_actnodecon{i2,3}(2)-1);%j=k/2 from k=2*j
+                else
+                    pore_pos(pore_iter,1)=(yx_actnodecon{i2,3}(1)+1)/2+m/2*(yx_actnodecon{i2,3}(2)-1);%j=(k+1)/2 from k=2*j-1
+                end
+                pore_pos(pore_iter,3)=3;
+            end
+
+        end
+
+    end
+
+end
+
+node_no=actnodeno;
+
+clear yx_actnodecon nodes actnodeno
+
+
+
+
+%0O0btaining the number(id) of pores connected to a specific node.
+% V1.3, finding nodes and pores connected to a specific node.
+node_pores_nodes=zeros(actnodes, 7);
+%V1.6 added, the last colomn for specifying if the node is BC or not.
+
+maxporepernod=0;    %number of allowed pore per node to inc the speed
+for inod=1:actnodes
+    if (x_actnode(inod)==1) || (x_actnode(inod)==n)
+        if (y_actnode(inod)==1) || (y_actnode(inod)==m)
+            maxporepernod=1;
+        else
+            maxporepernod=2;
+        end
+    else
+        if (y_actnode(inod)==1) || (y_actnode(inod)==m)
+            maxporepernod=2;
+        else
+            maxporepernod=3;
+        end
+    end
+
+    %=========== determining if node is BC1 or BC2 or none ======
+    if x_actnode(inod)==1
+        node_pores_nodes(inod,7)=1;
+    elseif x_actnode(inod)==n
+        node_pores_nodes(inod,7)=2;
+    end
+    %============================================================
+
+    if rem(x_actnode(inod),2)~=0  %odd x, first column seek, fard kind
+        seekcol=1;
+        anothercol=2;
+        type_node=1;%fard
+    else                          %even x, 2nd column seek, zoj kind
+        seekcol=2;
+        anothercol=1;
+        type_node=2;%zoj
+    end
+
+    i2=0;
+    for i=1:pores_no  %here we determine the node kind (fard or zoj) in order to determine the order of its neibours
+        if i2==maxporepernod, break; end
+        if pore_pos(i,seekcol)==inod
+            i2=i2+1;
+            node_con=pore_pos(i,anothercol);
+            if type_node == 1
+                if y_actnode(node_con)<y_actnode(inod)
+                    position=1;
+                elseif y_actnode(node_con)==y_actnode(inod)
+                    position=2;
+                elseif y_actnode(node_con)>y_actnode(inod)
+                    position=3;
+                end
+            else
+                if y_actnode(node_con)<y_actnode(inod)
+                    position=1;
+                elseif y_actnode(node_con)==y_actnode(inod)
+                    position=3;
+                elseif y_actnode(node_con)>y_actnode(inod)
+                    position=2;
+                end
+            end
+            node_pores_nodes(inod,position)=i;
+            %cols 1-3 for pores
+            node_pores_nodes(inod,position+3)=pore_pos(i,anothercol);
+            %cols 4-6 for nodes connected to those pores
+
+            %====V1.6, if pores connected to BCs ===========
+            if (x_actnode(inod)==n)||(x_actnode(node_con)==n)
+                pore_pos(i,4)=2;
+            end
+            if (x_actnode(inod)==1)||(x_actnode(node_con)==1)
+                pore_pos(i,4)=1;
+            end
+            %===============================================
+        end
+    end
+end
+
+
+%//////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+%Ver 1.8 to find the real places of nodes (X,Y) based on pore length unit
+node_realXY=[node_realX node_realY];
+pore_diff_XY=(node_realXY(pore_pos(:,1),:)-node_realXY(pore_pos(:,2),:))/2;
+pore_realX=node_realXY(pore_pos(:,2),1)+pore_diff_XY(:,1);
+pore_realY=node_realXY(pore_pos(:,2),2)+pore_diff_XY(:,2);
+pore_realXY=[pore_realX pore_realY];
+
+% figure;scatter(node_realXY(:,1),node_realXY(:,2),50,'.')
+% axis equal
+% %axis([0 .09 0 .031])%subject to change indeed
+% figure;scatter(pore_realXY(:,1),pore_realXY(:,2),50,'.')
+% axis equal
+% %axis([0 .09 0 .031])%subject to change indeed
+%//////////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+% chi_sub=[1.3e-8 1.3e-8 1.3e-7];
+% chi_bac=mean_radi^2*pi*porelength.*[7.7e-13 3e-13 7.7e-13];%volumetric chi
+% file_order={'static' 'homo' 'mov'};
+% chi_sub=[1.3e-7 1.3e-7 1.3e-7 1.3e-7 1.3e-7 1.3e-7];
+% chi_bac=mean_radi^2*pi*porelength.*[4e-13 5e-13 6e-13 7e-13 8e-13 9e-13];%volumetric chi
+% file_order={'mov1' 'mov2' 'mov3' 'mov4' 'mov5' 'mov6'};
+chi_sub=[3e-7 6e-7 9e-7 3e-6 6e-6 9e-6];
+chi_bac=mean_radi^2*pi*porelength.*[6e-13 6e-13 6e-13 6e-13 6e-13 6e-13];%volumetric chi
+file_order={'higherXs1' 'higherXs2' 'higherXs3' 'higherXs4' 'higherXs5' 'higherXs6'};
+% chi_sub=[3e-7 6e-7 9e-7 3e-6 6e-6 9e-6];
+% chi_bac=mean_radi^2*pi*porelength.*[10e-13 10e-13 10e-13 10e-13 10e-13 10e-13];%volumetric chi
+% file_order={'higherXs_higherXp1' 'higherXs_higherXp2' 'higherXs_higherXp3' 'higherXs_higherXp4' 'higherXs_higherXp5' 'higherXs_higherXp6'};
+% chi_sub=[3e-7 6e-7 9e-7 3e-6 6e-6 9e-6];
+% chi_bac=mean_radi^2*pi*porelength.*[2e-13 2e-13 2e-13 2e-13 2e-13 2e-13];%volumetric chi
+% file_order={'higherXs_lowerXp1' 'higherXs_lowerXp2' 'higherXs_lowerXp3' 'higherXs_lowerXp4' 'higherXs_lowerXp5' 'higherXs_lowerXp6'};
+for i_case=5:6
+
+
+%**************************************************************************
+%************************* Conductivity,Diameteres *********************************
+%Definition of the Conductivity(inverse Resistivity) of pores
+
+
+
+
+PV=0;%your flowrate based on Pore volume/s
+size_PV=size(PV);
+
+
+save_file=sprintf('.\\higherXs\\homomed_bacpat_%s_smaldt',file_order{i_case});
+%save_file='bac_pattern_hetromedia';%the file you save data in it!
+
+%+++++++++++++++++++++++ Initial Concentration ++++++++++++++++++++++++++++++++++++
+
+C1_input=.394;%1.553E-02;%input conc of solute Mole
+% C2_input=1.553E-06;
+% C3_input=0;
+% C4_input=0;
+
+conc_init=zeros(pores_no,1)+C1_input;
+% conc_init=0+(C1_input-0).*rand(pores_no,1);
+%conc_init(5817)=C1_input;%center
+%conc_init(8503)=C1_input;%right distance 7
+% conc_init(4743)=C1_input;%right distance 4
+
+max_bac_dens=10000/(mean_radi^2*pi*porelength);%means 10000 cells can be in a pore with avg radius = 1.2434e8 cells/ml
+
+
+% xrange_conc1=(10:15);
+% yrange_conc1=(10:15);
+% sumxy=x_actnode+y_actnode;
+% fracxy=x_actnode-y_actnode;
+% minsumxy=min(xrange_conc1)+min(yrange_conc1);
+% maxsumxy=max(xrange_conc1)+max(yrange_conc1);
+% minfracxy=min(xrange_conc1)-max(yrange_conc1);
+% maxfracxy=max(xrange_conc1)-min(yrange_conc1);
+% ind1=find(sumxy>minsumxy & sumxy<maxsumxy);
+% ind2=find(fracxy>minfracxy & fracxy<maxfracxy);
+% nodes_conc1=intersect(ind1,ind2);
+% pores_conc1=unique(node_pores_nodes(nodes_conc1(:),[1,2,3]));
+% pores_conc1=pores_conc1(pores_conc1~=0);
+% conc_init(pores_conc1)=C1_input;
+
+
+bac_stay=zeros(pores_no,1);
+bac_movin=zeros(pores_no,1);
+%bac_movin_sum=zeros(pores_no,1);
+prob=zeros(1, pores_no);
+
+dconc1_bc1_dt=-.1;%BC changing by time
+%+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+%--------------- Time variables-------------------
+dt=5;%time step
+tend=200000;%total time
+
+time=0;
+time_iter=0;
+time_save=200;% time of making frames (time_saver x dt=1 sec)
+%--------------------------------------------------
+
+%------------- defining the radius sizes in pore network -----------
+load('radi_lx005_sigma5e-9_50x50mm','radi_het');
+radi=radi_het;
+% radi=mean_radi.*ones(pores_no,1);%homogenous
+% radi=mean_radi+10e-6.*randn(pores_no,1);%homogenouse
+% load(radi_file,'radi_het')
+%radi=radi_het;
+%-------------------------------------------------------------------
+
+mio_water=8.94e-4;%water viscosity
+Cond=pi.*radi.^4./(8*mio_water*porelength);%conductivity profile based on Haggen-P equation
+pore_CS=pi.*radi.^2;%pores cross section
+vol=pore_CS.*porelength;%volume of pores in network
+vol_tot=sum(vol);
+%*************************** Conductivity,Diameteres (/end)**************************
+
+%---------------------------- cells initial values ------------------------------
+%bac1_input=2747;%initial bac inside each pore
+% bac2_input=1.553E-06;
+% bac3_input=1.553E-06;
+
+bac1=fix(max_bac_dens*0.25.*vol);
+%bac1=zeros(pores_no,1)+bac1_input;
+% bac1(5817)=bac1_input;%center
+%bac1(3669)=bac1_input;%left distance 3
+% bac1(7249)=bac1_input;%left distance 6
+% bac1=0+round((bac1_input-0).*rand(pores_no,1));
+% xrange_bac1=(25:35);
+% yrange_bac1=(25:35);
+% sumxy=x_actnode+y_actnode;
+% fracxy=x_actnode-y_actnode;
+% minsumxy=min(xrange_bac1)+min(yrange_bac1);
+% maxsumxy=max(xrange_bac1)+max(yrange_bac1);
+% minfracxy=min(xrange_bac1)-max(yrange_bac1);
+% maxfracxy=max(xrange_bac1)-min(yrange_bac1);
+% ind1=find(sumxy>minsumxy & sumxy<maxsumxy);
+% ind2=find(fracxy>minfracxy & fracxy<maxfracxy);
+% nodes_bac1=intersect(ind1,ind2);
+% pores_bac1=unique(node_pores_nodes(nodes_bac1(:),[1,2,3]));
+% pores_bac1=pores_bac1(pores_bac1~=0);
+% bac1(pores_bac1)=bac1_input;
+bac1_init=bac1;
+bac1_dens=bac1./vol;
+
+%**************************************************************************
+
+
+desired_DH=zeros(size_PV);
+flux_PV=zeros(pores_no,size_PV(1));
+
+for PV_i=1:size_PV(1)
+    
+desired_DH(PV_i)=100;
+desired_Q=0;
+
+for dummy_i=1:2
+
+
+    %----------------- "Changed BCs" diagonals of Sparse matrix construction ---------------------
+    nodes_notBC=node_no-m; %only for even m
+
+    downdiag=zeros(nodes_notBC,1);
+    downl=downdiag;
+    downr=downdiag;
+
+    updiag=downdiag;
+    upr=updiag;
+    upl=updiag;
+
+    bvector=zeros(nodes_notBC,1);
+    maindiag=zeros(nodes_notBC,1);
+
+    iup=m;
+    idown=0;
+    idiag=0;
+
+    for inod=m/2+1:node_no-m/2
+        iup=iup+1;
+        idown=idown+1;
+        idiag=idiag+1;
+        if rem(x_actnode(inod),2)==0 %zoj node
+            updiag(idiag)=-Cond(node_pores_nodes(inod,3));
+            %        updiag(idiag)=node_pores_nodes(inod,3+3);%to check if its right node
+
+            if idown==node_pores_nodes(inod,4)
+                downdiag(idiag)=-Cond(node_pores_nodes(inod,1));
+                if node_pores_nodes(inod,2)~=0,downr(idiag)=-Cond(node_pores_nodes(inod,2));end
+                %            downr(idiag)=node_pores_nodes(inod,2+3);%to check if its right node
+                %            downdiag(idiag)=node_pores_nodes(inod,1+3);
+            else
+                downdiag(idiag)=-Cond(node_pores_nodes(inod,2));
+                if node_pores_nodes(inod,1)~=0,downl(idiag)=-Cond(node_pores_nodes(inod,1));end
+                %            downl(idiag)=node_pores_nodes(inod,1+3);%to check if its right node
+                %            downdiag(idiag)=node_pores_nodes(inod,2+3);
+            end
+
+        else    %fard node
+            downdiag(idiag)=-Cond(node_pores_nodes(inod,2));
+            %        downdiag(idiag)=node_pores_nodes(inod,2+3);%to check if its right node
+
+            if iup==node_pores_nodes(inod,4)
+                updiag(idiag)=-Cond(node_pores_nodes(inod,1));
+                if node_pores_nodes(inod,3)~=0,upr(idiag)=-Cond(node_pores_nodes(inod,3));end
+                %            upr(idiag)=node_pores_nodes(inod,3+3);%to check if its right node
+                %            updiag(idiag)=node_pores_nodes(inod,1+3);
+            else
+                updiag(idiag)=-Cond(node_pores_nodes(inod,3));
+                if node_pores_nodes(inod,1)~=0,upl(idiag)=-Cond(node_pores_nodes(inod,1));end
+                %            upl(idiag)=node_pores_nodes(inod,1+3);%to check if its right node
+                %            updiag(idiag)=node_pores_nodes(inod,3+3);
+            end
+        end
+
+    end
+
+
+    %BC: the head pressure values in starting and ending nodes
+    %each applied to the first n/2 and last n/2 nodes in the structure
+    head_begin=desired_DH(PV_i);
+    head_end=0;
+
+    bv_end=[updiag(end-m/2+1:end),upr(end-m/2+1:end)];
+    bv_begin=[downdiag(1:m/2),downr(1:m/2)];
+    for inod=1:m/2
+        bvb_nozero=bv_begin(inod,:);
+        bvn_nozero=bv_end(end-inod+1,:);
+
+        %minus sign (-) because that Bvector is in the other side of the equation
+        bvector(inod)=-sum(bvb_nozero)*head_begin;
+        bvector(end-inod+1)=-sum(bvn_nozero)*head_end;
+    end
+
+
+    indmaindiag=node_pores_nodes(m/2+1:end-m/2,[1 2 3]);
+    for inod=1:nodes_notBC
+        none_zero_pores=indmaindiag(inod,:);
+        none_zero_pores(none_zero_pores==0)=[];
+        maindiag(inod,1)=sum(Cond(none_zero_pores));
+    end
+
+
+    Amat3=spdiags([upr updiag upl maindiag downr downdiag downl], [-(m/2+1) -m/2 -(m/2-1) 0 m/2-1 m/2 m/2+1], nodes_notBC, nodes_notBC);
+    head_calc = Amat3\bvector;
+
+    %---------------------------Matrix solved (/end)--------------------------------------
+
+
+
+
+
+    %-------------------------- Head values over medium & Fluxes -----------------------
+    head_BC1=repmat(head_begin,m/2,1);
+    head_BC2=repmat(head_end,m/2,1);
+    head = [head_BC1;head_calc;head_BC2];
+
+    flux=-Cond.*(head(pore_pos(:,2))-head(pore_pos(:,1)));
+    flux_PV(:,PV_i)=flux;
+    %-------------------------- Heads & Fluxes (/end)-----------------------
+
+
+    %---------------------------- total flowrate ----------------------------
+    %some commands to find out the total inlet and oulet Q
+    pore_bc_1=find(pore_pos(:,4)==1);
+    inletQ=sum(abs(flux(pore_bc_1)));
+    pore_bc_2=find(pore_pos(:,4)==2);
+    outletQ=sum(abs(flux(pore_bc_2)));
+
+
+    desired_Q=PV(PV_i)*vol_tot;
+
+    desired_DH(PV_i)=desired_Q*head_begin/inletQ
+    %--------------------------------------------------------------------
+
+end %dummy_i
+
+end %PV_i
+
+
+
+
+
+
+
+%----------------------V 1.6.1 -----------------------------------
+% Advection, Martin Explicite
+% we consider only pores that feed the specific pore
+
+%*********** NOTE for change of BC ***************
+%after changing the boundary condition and flow from Left to Right, we
+%don't encounter the parallel pores across the fluid flow.
+
+
+
+
+
+%Boundry conditions
+%for 4 species
+conc1_bc1=0;%C1_input;%1st spee
+conc1_bc2=0;
+% conc2_bc1=C2_input;
+% conc3_bc1=C3_input;
+% conc4_bc1=C4_input;%4th
+
+%concentraion profiles for plotting
+conc1_profile=zeros(pores_no,tend/dt/time_save);%1st spee
+% conc2_profile=zeros(pores_no,tend/dt/time_save);
+% conc3_profile=zeros(pores_no,tend/dt/time_save);
+% conc4_profile=zeros(pores_no,tend/dt/time_save);
+
+bac1_profile=zeros(pores_no,tend/dt/time_save);
+% bac2a_profile=zeros(pores_no,tend/dt/time_save);
+% bac3a_profile=zeros(pores_no,tend/dt/time_save);
+
+%deeepness_profile=zeros(pores_no,tend/dt/time_save);
+
+
+%+++++++++++++++++++Diffusion params+++++++++++
+% %for BC Diffusion (from 1 side to other side)
+% nod_bc2=find(node_pores_nodes(:,7)==2);
+nod_bc1=find(node_pores_nodes(:,7)==1);
+
+%singular variable only for Diffusion
+conc1_last=conc_init;%1st spee
+conc1=conc_init;
+% conc2_last=conc_init;
+% conc3_last=conc_init;
+% conc4_last=conc_init;
+
+C1node=zeros(node_no,1);%1st spee
+% C2node=zeros(node_no,1);
+% C3node=zeros(node_no,1);
+% C4node=zeros(node_no,1);
+
+Diff1_flux=zeros(pores_no,2);%1st spee
+% Diff2_flux=zeros(pores_no,2);
+% Diff3_flux=zeros(pores_no,2);
+% Diff4_flux=zeros(pores_no,2);
+
+diff1_coff=9e-10;%2*1e-6;%1st spee
+% diff2_coff=6e-10;
+% diff3_coff=6e-10;
+% diff4_coff=6e-10;
+
+diffb1_coff=5.19e-10;%2*1e-6;%1e-6; %1st bac
+chib1c1=chi_sub(i_case);%1.3e-8;%1e-1;
+chib1b1=chi_bac(i_case);%7.7e-13;
+fact1=diffb1_coff*dt/porelength^2;
+fact2=chib1c1*dt/porelength;
+fact3=chib1b1*dt/porelength;
+%++++++++++++++++++++++++++++++++++++++++++++++
+
+
+%++++++++++++++++++BRNS variables+++++++++++++++++++++++++++++++++++++++++
+
+%----  BRNS file fixed params in dll file (Optional)----
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%2spee
+fixedConcentrationBoundary=[0 0]; % must have entry for every species!
+
+waterSaturation=0;
+porosity=0;
+pos_x=0;
+posx_ptr=libpointer('doublePtr', pos_x);
+pos_y=0;
+posy_ptr=libpointer('doublePtr', pos_y);
+pos_z=0;
+posz_ptr=libpointer('doublePtr', pos_z);
+
+fcb_ptr=libpointer('int32Ptr', fixedConcentrationBoundary);
+p_ptr=libpointer('doublePtr', porosity);
+ws_ptr=libpointer('doublePtr', waterSaturation);
+returnValue=0;%-1;
+rv_ptr=libpointer('int32Ptr', returnValue);
+
+%2spee
+numberOfSpecies=2;%number of spee!!!
+nos_ptr=libpointer('int32Ptr', numberOfSpecies);
+
+timeStep=dt;%for now we take same timestep from advection for reaction
+ts_ptr=libpointer('doublePtr', timeStep);
+%************************************************************************************************
+library_file='brns';
+[notfound,warnings]=loadlibrary(strcat(library_file,'.so'), 'brnsdll_param_new.h');
+% %************************************************************************************************
+% %++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+%+++++++++++++++++++Advection params+++++++++++++++
+flux=flux_PV(:,1);
+flux_adv_abs=abs(flux);
+%++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+while time<tend
+
+    %****************** Pulse fluid speed ******************
+    %****************** Check with Advection params ********
+%     if rem(fix(time/10),2)==0
+%         flux=flux_PV(:,1);%pulse flow
+%         %conc1_bc1= 0;%pulse inlet conc
+%         %--------pulse BC Diffusive--------
+%         %Cnode(nod_bc1)=0;
+%     else
+%         flux=flux_PV(:,2);%pulse flow
+%         %conc1_bc1= 0;%pulse inlet conc
+%         %--------pulse BC Diffusive--------
+%         %Cnode(nod_bc1)=0;
+%     end
+%     flux_adv_abs=abs(flux);
+    
+    %---------------Advection-----------------------------------------
+    
+%     Cin1=zeros(pores_no,1);%inlet pore network concentration for 1st spee
+% %     Cin2=zeros(pores_no,1);
+% %     Cin3=zeros(pores_no,1);
+% %     Cin4=zeros(pores_no,1);
+% 
+%     for pore_iter=1:pores_no
+% 
+%         node_fard=pore_pos(pore_iter,1);
+%         node_zoj=pore_pos(pore_iter,2);
+% 
+%         if pore_pos(pore_iter,4)~=1%voroody BC1 nabashad
+%             if sign(flux(pore_iter))==1
+%                 Cin_all=node_pores_nodes(node_fard, [1,2,3]);
+%                 acceptedflux=-1;
+%                 Cin_all(Cin_all==0)=[];
+%                 Cin_all(Cin_all==pore_iter)=[];
+%                 Cin_all(sign(flux(Cin_all))==-acceptedflux)=[];
+%                 Cin1(pore_iter)=sum(conc1_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%1st spee
+% %                 Cin2(pore_iter)=sum(conc2_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%2nd spee
+% %                 Cin3(pore_iter)=sum(conc3_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%3rd spee
+% %                 Cin4(pore_iter)=sum(conc4_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%4th spee
+%                 
+%             elseif sign(flux(pore_iter))==-1
+%                 Cin_all=node_pores_nodes(node_zoj, [1,2,3]);
+%                 acceptedflux=1;
+%                 Cin_all(Cin_all==0)=[];
+%                 Cin_all(Cin_all==pore_iter)=[];
+%                 Cin_all(sign(flux(Cin_all))==-acceptedflux)=[];
+%                 Cin1(pore_iter)=sum(conc1_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%1st spee
+% %                 Cin2(pore_iter)=sum(conc2_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%2nd spee
+% %                 Cin3(pore_iter)=sum(conc3_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%3rd spee
+% %                 Cin4(pore_iter)=sum(conc4_last(Cin_all).*flux_adv_abs(Cin_all))/sum(flux_adv_abs(Cin_all));%4th spee
+%             else %vaghty hich jaryani az pore oboor nemikone
+%                 Cin1(pore_iter)=0;%1st spee
+% %                 Cin2(pore_iter)=0;
+% %                 Cin3(pore_iter)=0;
+% %                 Cin4(pore_iter)=0;
+%             end
+%         else
+%             %   BC Advection (for BC input only, for zero flux should it be commented)
+%             %Cin1(pore_iter)=conc1_bc1;%1st spee
+% %             Cin2(pore_iter)=conc2_bc1;
+% %             Cin3(pore_iter)=conc3_bc1;
+% %             Cin4(pore_iter)=conc4_bc1;
+% 
+%         end
+%     end
+%     
+% 
+%     %advedtive species
+% 
+%     conc1_adv=dt.*flux_adv_abs./vol.*(Cin1-conc1_last);%1st spee
+    
+%     conc2_adv=dt.*flux_adv_abs./vol.*(Cin2-conc2_last);
+%     conc3_adv=dt.*flux_adv_abs./vol.*(Cin3-conc3_last);
+%     conc4_adv=dt.*flux_adv_abs./vol.*(Cin4-conc4_last);
+
+
+    %-------------------------Advection (/end)---------------------------------
+
+
+
+    %----------------------Diffusion--------------------
+    for node_iter=1:node_no
+
+        connect_pores=node_pores_nodes(node_iter,[1,2,3]);
+        connect_pores(connect_pores<=0)=[];
+
+        C1node(node_iter)=sum(conc1_last(connect_pores).*pore_CS(connect_pores))/sum(pore_CS(connect_pores));%1st spee
+%         C2node(node_iter)=sum(conc2_last(connect_pores).*pore_CS(connect_pores))/sum(pore_CS(connect_pores));
+%         C3node(node_iter)=sum(conc3_last(connect_pores).*pore_CS(connect_pores))/sum(pore_CS(connect_pores));
+%         C4node(node_iter)=sum(conc4_last(connect_pores).*pore_CS(connect_pores))/sum(pore_CS(connect_pores));
+    end
+
+    %   BC diffusion (for BC input only, for zero flux should it be commented)
+    %C1node(nod_bc1)=conc1_bc1;%constant feed %1st spee
+%     C2node(nod_bc1)=conc2_bc1;
+%     C3node(nod_bc1)=conc3_bc1;
+%     C4node(nod_bc1)=conc4_bc1;
+    
+
+    %----- %1st spee -----------------
+    Diff1_flux(:,1)=-diff1_coff.*(conc1_last-C1node(pore_pos(:,1)))/(porelength/2);%1st spee
+    Diff1_flux(:,2)=-diff1_coff.*(conc1_last-C1node(pore_pos(:,2)))/(porelength/2);
+
+    conc1_diff=dt*(Diff1_flux(:,1)+Diff1_flux(:,2))/porelength;
+%     %----- %2nd spee -----------------
+%     Diff2_flux(:,1)=-diff2_coff.*(conc2_last-C2node(pore_pos(:,1)))/(porelength/2);
+%     Diff2_flux(:,2)=-diff2_coff.*(conc2_last-C2node(pore_pos(:,2)))/(porelength/2);
+% 
+%     conc2_diff=dt*(Diff2_flux(:,1)+Diff2_flux(:,2))/porelength;
+%     %     %----- %3rd spee -----------------
+%     Diff3_flux(:,1)=-diff3_coff.*(conc3_last-C3node(pore_pos(:,1)))/(porelength/2);
+%     Diff3_flux(:,2)=-diff3_coff.*(conc3_last-C3node(pore_pos(:,2)))/(porelength/2);
+% 
+%     conc3_diff=dt*(Diff3_flux(:,1)+Diff3_flux(:,2))/porelength;
+%     %     %----- %4th spee -----------------
+%     Diff4_flux(:,1)=-diff4_coff.*(conc4_last-C4node(pore_pos(:,1)))/(porelength/2);
+%     Diff4_flux(:,2)=-diff4_coff.*(conc4_last-C4node(pore_pos(:,2)))/(porelength/2);
+% 
+%     conc4_diff=dt*(Diff4_flux(:,1)+Diff4_flux(:,2))/porelength;
+
+    %---------------------Diffusion (/end)----------------
+
+
+    conc1=conc1_last+conc1_diff;%+conc1_adv;%1st spee
+%     conc2=conc2_last+conc2_adv+conc2_diff;
+%     conc3=conc3_last+conc3_adv+conc3_diff;
+%     conc4=conc4_last+conc4_adv+conc4_diff;
+
+%--------------------------------------------
+
+
+    %*************************************************************************************************
+    %------------------------- REACTION BRNS 1.8 --------------------------------
+    rand_num=rand(pores_no,1);
+    for pore_iter=1:pores_no
+        ConcAfterTransport=[bac1(pore_iter) conc1(pore_iter)];%2spee
+        ConcBeforeTransport=ConcAfterTransport;%used as initial guess for newton iteration
+        OutputConcentrations =[0.0 0.0];%13spee
+
+        cat_ptr=libpointer('doublePtr', ConcAfterTransport);
+        cbt_ptr=libpointer('doublePtr', ConcBeforeTransport);
+        oc_ptr=libpointer('doublePtr', OutputConcentrations);
+
+        %radi dependency of reaction, R Best
+        %variant robac for every realization
+%         par_ptr=libpointer('doublePtr', [radi(pore_iter) bac1(pore_iter)]);% specify external parameters from dll
+        par_ptr=libpointer('doublePtr', [radi(pore_iter) rand_num(pore_iter)]);% specify external parameters from dll
+
+        % Calling BRNS
+        calllib(library_file,'invokebrns_',cat_ptr, cbt_ptr, oc_ptr, nos_ptr, ts_ptr,...
+            fcb_ptr, rv_ptr, posx_ptr, posy_ptr, posz_ptr, p_ptr, ws_ptr, par_ptr)
+
+        % Retrieving Data
+        returnValue=get(rv_ptr, 'Value');
+        if returnValue~=0, [returnValue pore_iter],end
+        % CHECK returnValue:
+        % 0: Computation ok
+        % 1: Negative concentrations occured
+        % 2: Exceeding maximum newton iteration
+        % 3: 1 and 2
+        OutputConcentrations=get(oc_ptr, 'Value');
+        bac1(pore_iter)=round(OutputConcentrations(1));
+%         conc2(pore_iter)=OutputConcentrations(2);
+%         conc3(pore_iter)=OutputConcentrations(3);
+%         conc4(pore_iter)=OutputConcentrations(4);
+        
+        conc1(pore_iter)=OutputConcentrations(2);
+        
+
+    end
+
+    %------------------------- BRNS ends ------------------------------------
+    %*************************************************************************************************
+
+
+%------------------------ IBM ---------------------------------
+
+bac_movin_sum=zeros(pores_no,1);
+
+for pore_iter=1:pores_no
+    
+    node_fard=pore_pos(pore_iter,1);
+    node_zoj=pore_pos(pore_iter,2);
+    
+    pores_fard_tot=node_pores_nodes(node_fard, [1,2,3]);
+    pores_fard_tot(pores_fard_tot==0)=[];
+    
+    pores_fard=pores_fard_tot;
+    pores_fard(pores_fard==pore_iter)=[];
+    
+    
+    pores_zoj_tot=node_pores_nodes(node_zoj, [1,2,3]);
+    pores_zoj_tot(pores_zoj_tot==0)=[];
+    
+    pores_zoj=pores_zoj_tot;
+    pores_zoj(pores_zoj==pore_iter)=[];
+    
+    
+    
+    %finding the values for attractant gradients, deltak and delta^2k
+    if node_pores_nodes(node_zoj,7)~=0
+        %BC conditions here
+        if node_pores_nodes(node_zoj,7)==1
+            %concBC=conc1_bc1;%BC input
+            concBC=conc1(pore_iter);
+            bac1BC=bac1_dens(pore_iter);
+        elseif node_pores_nodes(node_zoj,7)==2
+            concBC=conc1(pore_iter);
+            bac1BC=bac1_dens(pore_iter);
+        end
+        drive1=(concBC-sum(conc1(pores_fard_tot).*pore_CS(pores_fard_tot))/sum(pore_CS(pores_fard_tot)))...
+           /porelength;
+        driveb1=(bac1BC-sum(bac1_dens(pores_fard_tot).*pore_CS(pores_fard_tot))/sum(pore_CS(pores_fard_tot)))...
+           /porelength;
+%         if isempty(pores_zoj)
+%             concBC2=concBC;
+%         else
+%             concBC2=(conc1(pores_zoj)+concBC)/2;%only when there are 3plix connections
+%         end
+        drive2=(concBC-conc1(pore_iter)...
+            -(conc1(pore_iter)-sum(conc1(pores_fard).*pore_CS(pores_fard))/sum(pore_CS(pores_fard))))...
+            /porelength^2;
+        driveb2=(bac1BC-bac1_dens(pore_iter)...
+            -(bac1_dens(pore_iter)-sum(bac1_dens(pores_fard).*pore_CS(pores_fard))/sum(pore_CS(pores_fard))))...
+            /porelength^2;
+    elseif node_pores_nodes(node_fard,7)~=0
+        %BC conditions here
+        if node_pores_nodes(node_fard,7)==1
+            %concBC=conc1_bc1;%BC input
+            concBC=conc1(pore_iter);
+            bac1BC=bac1_dens(pore_iter);
+        elseif node_pores_nodes(node_fard,7)==2
+            concBC=conc1(pore_iter);
+            bac1BC=bac1_dens(pore_iter);
+        end
+        drive1=(sum(conc1(pores_zoj_tot).*pore_CS(pores_zoj_tot))/sum(pore_CS(pores_zoj_tot))-concBC)...
+            /porelength;
+        driveb1=(sum(bac1_dens(pores_zoj_tot).*pore_CS(pores_zoj_tot))/sum(pore_CS(pores_zoj_tot))-bac1BC)...
+            /porelength;
+%         if isempty(pores_fard)
+%             concBC2=concBC;
+%         else
+%             concBC2=(conc1(pores_fard)+concBC)/2;%only when there are 3plix connections
+%         end
+        drive2=((sum(conc1(pores_zoj).*pore_CS(pores_zoj))/sum(pore_CS(pores_zoj))-conc1(pore_iter))...
+            -(conc1(pore_iter)-concBC))...
+            /porelength^2;
+        driveb2=((sum(bac1_dens(pores_zoj).*pore_CS(pores_zoj))/sum(pore_CS(pores_zoj))-bac1_dens(pore_iter))...
+            -(bac1_dens(pore_iter)-bac1BC))...
+            /porelength^2;
+    else
+        drive1=(sum(conc1(pores_zoj_tot).*pore_CS(pores_zoj_tot))/sum(pore_CS(pores_zoj_tot))...
+           -sum(conc1(pores_fard_tot).*pore_CS(pores_fard_tot))/sum(pore_CS(pores_fard_tot)))...
+           /porelength;
+        driveb1=(sum(bac1_dens(pores_zoj_tot).*pore_CS(pores_zoj_tot))/sum(pore_CS(pores_zoj_tot))...
+           -sum(bac1_dens(pores_fard_tot).*pore_CS(pores_fard_tot))/sum(pore_CS(pores_fard_tot)))...
+           /porelength;
+        drive2=((sum(conc1(pores_zoj).*pore_CS(pores_zoj))/sum(pore_CS(pores_zoj))-conc1(pore_iter))...
+            -(conc1(pore_iter)-sum(conc1(pores_fard).*pore_CS(pores_fard))/sum(pore_CS(pores_fard))))...
+            /porelength^2;
+        driveb2=((sum(bac1_dens(pores_zoj).*pore_CS(pores_zoj))/sum(pore_CS(pores_zoj))-bac1_dens(pore_iter))...
+            -(bac1_dens(pore_iter)-sum(bac1_dens(pores_fard).*pore_CS(pores_fard))/sum(pore_CS(pores_fard))))...
+            /porelength^2;
+    end
+   
+
+    
+    if isempty(pores_zoj) || isempty(pores_fard)
+        prob(pore_iter)=1-fact1+fact2*(drive2*porelength+drive1*(pore_CS(pore_iter)/sum(pore_CS(pores_zoj_tot))...
+        -pore_CS(pore_iter)/sum(pore_CS(pores_fard_tot))))...
+        +fact3*(driveb2*porelength+driveb1*(pore_CS(pore_iter)/sum(pore_CS(pores_zoj_tot))...
+        -pore_CS(pore_iter)/sum(pore_CS(pores_fard_tot))));
+    else
+        prob(pore_iter)=1-2*fact1+fact2*(drive2*porelength+drive1*(pore_CS(pore_iter)/sum(pore_CS(pores_zoj_tot))...
+        -pore_CS(pore_iter)/sum(pore_CS(pores_fard_tot))))...
+        +fact3*(driveb2*porelength+driveb1*(pore_CS(pore_iter)/sum(pore_CS(pores_zoj_tot))...
+        -pore_CS(pore_iter)/sum(pore_CS(pores_fard_tot))));
+    end
+
+    if ~isempty(pores_zoj)
+        prob(pores_zoj)=fact1.*pore_CS(pores_zoj)./sum(pore_CS(pores_zoj))...
+            +fact2*drive1.*pore_CS(pores_zoj)./sum(pore_CS(pores_zoj_tot))...
+            +fact3*driveb1.*pore_CS(pores_zoj)./sum(pore_CS(pores_zoj_tot));
+    end
+    if ~isempty(pores_fard)
+        prob(pores_fard)=fact1.*pore_CS(pores_fard)./sum(pore_CS(pores_fard))...
+            -fact2*drive1.*pore_CS(pores_fard)./sum(pore_CS(pores_fard_tot))...
+            -fact3*driveb1.*pore_CS(pores_fard)./sum(pore_CS(pores_fard_tot));
+    end
+    
+%     if ~isempty(pores_zoj)
+%         prob_zoj_disp=2*fact1*pore_CS(pore_iter)/sum(pore_CS(pores_fard));
+%         prob_zoj_chemo=fact2*porelength*pore_CS(pore_iter)/sum(pore_CS(pores_fard_tot))*drive1;
+%         chem_weight_fard=sum(pore_CS(pores_fard).*conc1(pores_fard));
+%         
+%         prob(pore_zoj)=prob_zoj_disp.*pore_CS(pores_zoj)./sum(pore_CS(pores_zoj))+prob_zoj_chemo.*(pore_CS(pores_zoj).*conc1(pores_zoj)./chem_weight_zoj);
+%     end
+%     if ~isempty(pores_fard)
+%         prob_fard_disp=2*fact1*pore_CS(pore_iter)/sum(pore_CS(pores_zoj));
+%         prob_fard_chemo=-fact2*porelength*pore_CS(pore_iter)/sum(pore_CS(pores_zoj_tot))*drive1;
+%         chem_weight_zoj=sum(pore_CS(pores_zoj).*conc1(pores_zoj));
+%         
+%         prob(pore_fard)=prob_fard_disp.*pore_CS(pores_fard)./sum(pore_CS(pores_fard))+prob_fard_chemo.*(pore_CS(pores_fard).*conc1(pores_fard)./chem_weight_fard);
+%     end
+    bacno=bac1(pore_iter);
+    if isempty(pores_zoj)
+        bac_mov_no = bac_prob2no( bacno,[prob(pore_iter) prob(pores_fard)] );
+        bac_stay(pore_iter)= bac_mov_no(1);
+        bac_movin(pores_fard)= bac_mov_no(2:2+length(pores_fard)-1);
+        bac_movin_sum(pores_fard)=bac_movin_sum(pores_fard)+bac_movin(pores_fard);
+    elseif isempty(pores_fard)
+        bac_mov_no = bac_prob2no( bacno,[prob(pore_iter) prob(pores_zoj)] );
+        bac_stay(pore_iter)= bac_mov_no(1);
+        bac_movin(pores_zoj)= bac_mov_no(2:2+length(pores_zoj)-1);
+        bac_movin_sum(pores_zoj)=bac_movin_sum(pores_zoj)+bac_movin(pores_zoj);
+    else
+        bac_mov_no = bac_prob2no( bacno,[prob(pore_iter) prob(pores_zoj) prob(pores_fard)] );
+        bac_stay(pore_iter)= bac_mov_no(1);
+        bac_movin(pores_zoj)= bac_mov_no(2:2+length(pores_zoj)-1);
+        bac_movin(pores_fard)= bac_mov_no(2+length(pores_zoj):2+length(pores_zoj)+length(pores_fard)-1);
+        bac_movin_sum([pores_fard pores_zoj])=bac_movin_sum([pores_fard pores_zoj])+bac_movin([pores_fard pores_zoj]);
+    end
+
+    
+end
+%------------------------  /end IBM ---------------------------------
+
+
+
+
+    bac1=bac_stay+bac_movin_sum;
+    bac1_dens=bac1./vol;
+    
+    %--------------------------- Over flow of bactria in a pore --------------------------
+    
+    while bac1_dens(bac1_dens>max_bac_dens)
+        bac_movin_sum=zeros(pores_no,1);
+        ind_bac_over=find(bac1_dens>max_bac_dens);
+        %bac1(ind_bac_over)
+        for pore_iter= ind_bac_over'
+            node_fard=pore_pos(pore_iter,1);
+            node_zoj=pore_pos(pore_iter,2);
+            
+            pores_fard_tot=node_pores_nodes(node_fard, [1,2,3]);
+            pores_fard_tot(pores_fard_tot==0)=[];
+            
+            pores_fard=pores_fard_tot;
+            pores_fard(pores_fard==pore_iter)=[];
+            
+            
+            pores_zoj_tot=node_pores_nodes(node_zoj, [1,2,3]);
+            pores_zoj_tot(pores_zoj_tot==0)=[];
+            
+            pores_zoj=pores_zoj_tot;
+            pores_zoj(pores_zoj==pore_iter)=[];
+            
+            if ~isempty(pores_zoj)
+                if bac1(pores_zoj)
+                    prob(pores_zoj)=1./bac1(pores_zoj);
+                else
+                    prob(pores_zoj)=.5;
+                end
+            end
+            if ~isempty(pores_fard)
+                if bac1(pores_fard)
+                    prob(pores_fard)=1./bac1(pores_fard);
+                else
+                    prob(pores_fard)=.5;
+                end
+            end
+            
+            
+            %prob(pore_iter)=1/bac1(pore_iter);
+            bacno=bac1(pore_iter)-fix(max_bac_dens*vol(pore_iter));
+            bac1(pore_iter)=bac1(pore_iter)-bacno;
+            if isempty(pores_zoj)
+                bac_mov_no = bac_prob2no( bacno, prob(pores_fard) );
+                %bac_stay(pore_iter)= bac_mov_no(1);
+                bac_movin(pores_fard)= bac_mov_no(1:length(pores_fard));
+                bac_movin_sum(pores_fard)=bac_movin_sum(pores_fard)+bac_movin(pores_fard);
+            elseif isempty(pores_fard)
+                bac_mov_no = bac_prob2no( bacno, prob(pores_zoj) );
+                %bac_stay(pore_iter)= bac_mov_no(1);
+                bac_movin(pores_zoj)= bac_mov_no(1:length(pores_zoj));
+                bac_movin_sum(pores_zoj)=bac_movin_sum(pores_zoj)+bac_movin(pores_zoj);
+            else
+                bac_mov_no = bac_prob2no( bacno,[prob(pores_zoj) prob(pores_fard)] );
+                %bac_stay(pore_iter)= bac_mov_no(1);
+                bac_movin(pores_zoj)= bac_mov_no(1:length(pores_zoj));
+                bac_movin(pores_fard)= bac_mov_no(1+length(pores_zoj):length(pores_zoj)+length(pores_fard));
+                bac_movin_sum([pores_fard pores_zoj])=bac_movin_sum([pores_fard pores_zoj])+bac_movin([pores_fard pores_zoj]);
+            end
+        end
+        bac1=bac1+bac_movin_sum;
+        bac1_dens=bac1./vol;
+        %sum(bac1)
+    end
+    %--------------------------- /end Over flow of bactria in a pore -------------------
+    
+    
+    time=time+dt;
+    time_iter=1+time_iter;
+    
+    
+    
+    if time~=0 && mod(time_iter,time_save)==0
+        conc1_profile(:,time_iter/time_save)=conc1;%1st spee
+%         time
+%         conc2_profile(:,time_iter/time_save)=conc2;%2nd spee
+%         conc3_profile(:,time_iter/time_save)=conc3;
+%         conc4_profile(:,time_iter/time_save)=conc4;
+        
+        bac1_profile(:,time_iter/time_save)=bac1;
+%         bac2a_profile(:,time_iter/time_save)=bac2a;
+%         bac3a_profile(:,time_iter/time_save)=bac3a;
+        
+    end
+
+
+    conc1_last=conc1;%1st spee
+%     conc2_last=conc2;
+%     conc3_last=conc3;
+%     conc4_last=conc4;
+
+end
+
+unloadlibrary(library_file)                                                %close BRNS library
+
+%----------------------------V1,6 Exp Advection-----------------------------
+
+
+%save whatever parameter you want here in the file
+save(save_file);%,'conc1_profile','bac1_profile')
+toc
+end
+% y_trancent=pore_realY(7249)
+% trancent=find(pore_realY==y_trancent);
+% for i=1:15;conc_trancent(:,i)=conc1_profile(trancent,i*10);end
+% for i=1:15;bac_trancent(:,i)=bac1_profile(trancent,i*10);end
+% xlswrite('chemo_4_6.xls',[pore_realX(trancent), bac_trancent, conc_trancent],'chemoattract')
+% figure;scatter(pore_realX ,pore_realY ,50,conc1_profile(:,150),'.');axis equal;axis([0 max(pore_realX) 0 max(pore_realY)]);
+
+% indX=unique(pore_realX);
+% j=1;for i=indX',trancent=find(pore_realX==i);bac1_X(j)=sum(bac1_profile(trancent,150));j=j+1;end

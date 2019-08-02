@@ -1,0 +1,134 @@
+\pagebreak
+\section{Useful stuff}
+\dots typically for internal use\\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{char *GetCircElement(int rad, double rx, double ry)}
+{
+Generates a 2D circular structuring element with radius {\tt rad} [pixel]. Returns a pointer to an array, $a$ (char), containing the structuring element: $a[0] =$ radius in x-direction [pixel], $a[1] =$ radius in y-direction. $a[2 ...]$ contains all pixel of the smallest square containing the structuring element with dimension $(2a[0]+1)\times (2a[1]+1)$. Each pixel is coded by 1 bit which has the value 1 if it is part of the stucturing element and 0 else. The position of a pixel (x,y) is identified by  $pos=y*(2a[0]+1)+x$. For a given $pos$ you find its value by $*(a+2+pos/8)$ \& $1 << pos\%8$. 
+
+\medskip
+\argu{rad} {radius of the structuring element [voxels]}
+\argu{rx, ry} {Resolution (pixel size) in different dimensions [L]}
+\return{ pointer to the structuring element}
+}
+
+%--------------------- PRIVATE ----------------------------------------
+\command{char *GetSphereElement(int rad, double rx, double ry, double rz)}{
+Generates a spherical structuring element with radius {\tt rad} [voxels].
+
+\medskip
+\argu{rad} {radius of the structuring element [voxels]}
+\argu{rx, ry, rz} {Resolution in different dimensions [L]}
+
+\smallskip
+\return{ pointer to an array, $a$ (char), containing the structuring element: $a[0] =$ radius in x-direction [voxel], $a[1] =$ radius in y-direction, $a[2] =$ radius in z-direction. $a[3 ...]$ contains all voxels of the smallest cube containing the structuring element with dimension $(2a[0]+1)\times (2a[1]+1)\times (2a[2]+1)$. Each voxel is coded by 1 bit which has the value 1 if it is part of the stucturing element and 0 else. The position of a voxel (x,y,z) is identified by  $pos=z*(2a[0]+1)*(2a[1]+1)+y*(2a[0]+1)+x$. For a given $pos$ you find its value by $*(a+3+pos/8)$ \& $1 << pos\%8$. } 
+}
+%-------------------------------------------------------------
+
+%--------------------------------- hj 14.04.04
+\command{char *GetSphereElementDouble(double rad, double rx, double ry, double rz, int *vol)}{
+Same as GetSphereElement but with non-integer radius {\tt rad} [voxels].
+
+\medskip
+\argu{rad} {radius of the structuring element [voxels]}
+\argu{rx, ry, rz} {Resolution in different dimensions [L]}
+\argu{vol} {the size of the structuring element [number of voxels] is written to this address}
+
+\smallskip
+\return{ same as GetSphereElement.  }
+}
+%-------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\command{       % COMMAND
+long int *bQuantMask(image\_cc *image, int xm, int ym, char *mask)
+}{              % DESCRIPTION
+Calculates the frequency distribution of 2x2 pixel configurations for a region identified by {\tt mask}. The format of  {\tt mask} corresponds to that returned by GetCircElement. The returned pointer is input for the routines to calculate the Minkowski functionals.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*im}{Pointer to the binary 2D-image.}
+\argu{int xm, ym}{Coordinates of the center of the region described by {\tt mask}.}
+\argu{*mask}{Mask for the region to be analyzed.}
+\return{Pointer to the 16-element array containing the frequencies of pixel configurations}
+}
+
+%--------------------------------- hj 18.9.98
+\command{       % COMMAND
+float ran3(long *idum);
+}{              % DESCRIPTION
+Genetrates a random number $\in$[0,1].
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*idum}{Pointer to the initialization value.}
+\return{Random number.}
+}
+
+%---------------------------------ok
+\command{       % COMMAND
+void GetMinMax(image\_cc *image, int *max, int *min);
+}{              % DESCRIPTION
+Determines the maximum and the minimum value of an image.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the image.}
+\argu{*min, *max}{The resulting minimum and maximum values.}
+}
+
+%---------------------------------ok
+\command{       % COMMAND
+int GetMaxGrey(image\_cc *im)
+}{              % DESCRIPTION
+Determines the maximum grey value of an image not considering the absolut possible maximum of the image type.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the image.}
+\return{maximum grey value.}
+}
+
+%---------------------------------ok
+\command{       % COMMAND
+int GetMinGrey(image\_cc *im)
+}{              % DESCRIPTION
+Determines the minimum grey value of an image not considering the value zero.
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*image}{Pointer to the image.}
+\return{minimum grey value.}
+}
+
+%--------------------------------- hj 13.08.01
+\command{       % COMMAND
+void MinMaxf(double *ar, int n, double *min, double *max);
+}{              % DESCRIPTION
+calculates the minimum and maximum value of a double array
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{*ar}{Pointer to the array}
+\argu{n}{dimension of the array}
+\argu{*min}{addresse to store minimum}
+\argu{*max}{addresse to store maximum}
+\return{Euler number [1/L$^3$]  in units of image->rcol}
+}
+
+%--------------------------------- hj 22.02.02
+\command{       % COMMAND
+double **dmatrix(int n, int m);
+}{              % DESCRIPTION
+allocates a 2D double array with dimensions n x m
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{n, m}{dimensions of the array}
+\return{pointer to the allocated memory}
+}
+
+%--------------------------------- hj 22.02.02
+\command{       % COMMAND
+int **imatrix(int n, int m);
+}{              % DESCRIPTION
+allocates a 2D int array with dimensions n x m
+
+\medskip        %ARGUMENTS AND RETURN VALUE
+\argu{n, m}{dimensions of the array}
+\return{pointer to the allocated memory}
+}
